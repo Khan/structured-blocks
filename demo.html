@@ -1,0 +1,286 @@
+<html>
+<head></head>
+<body>
+    <link rel="stylesheet" href="external/structuredjs/external/qunit.css"/>
+    <script src="external/structuredjs/external/jquery.min.js"></script>
+    <script src="external/structuredjs/external/underscore.min.js"></script>
+    <script src="external/structuredjs/external/esprima.js"></script>
+    <script src="external/structuredjs/structured.js"></script>
+    <script src="external/structuredjs/external/qunit.js"></script>
+    <script src="external/escodegen.browser.js"></script>
+    <!--<script src="tests.js"></script>-->
+    <script>
+    var Rule = function(node) {
+        this.node = node;
+
+        for (var r = 0; r < Rule.rules.length; r++) {
+            var match = Structured.matchNode(this.node,
+                Rule.rules[r].structure);
+            if (match) {
+                this.rule = Rule.rules[r];
+                this.match = match;
+                this.recurseRule();
+                return;
+            }
+        }
+
+        if (!this.rule.match) {
+            // TODO: Handle no match
+            throw "No rule found for: " + JSON.stringify(node);
+        }
+    };
+
+    Rule.rules = [
+        {
+            structure: function() {
+                var _ = _;
+            },
+            type: function(match) {
+                return "statement";
+            },
+            block: function(match) {
+                return "<div class='block block-statement'>" +
+                "var <div class='block-blank'>" + this.match._[0].toBlockHTML() + "</div>" +
+                " = <div class='block-blank'>" + this.match._[1].toBlockHTML() + "</div>;" +
+                "</div>";
+            }
+        },
+        {
+            structure: {type: "Identifier"},
+            type: function() {
+                return "variable";
+            },
+            block: function() {
+                return "<div class='block block-inline'>" +
+                "<input type='text' value='" + this.match.root.name + "'/>" +
+                "</div>";
+            }
+        },
+        {
+            structure: {type: "Literal"},
+            type: function() {
+                return typeof this.match.root.value;
+            },
+            block: function() {
+                return "<div class='block block-inline'>" +
+                "<input type='text' value='" + this.match.root.value + "'/>" +
+                "</div>";
+            }
+        }
+    ];
+
+    Rule.prototype = {
+        toAST: function() {
+            // find all _/glob_ and $../glob$.. tokens and
+            // recurse through and get the toAST of them, as well
+            // Check if rule has a toAST() and call that instead
+        },
+
+        toScript: function() {
+            return escodegen.generate(this.toAST());
+        },
+
+        toBlockHTML: function() {
+            // NOTE: We actually want to be using the AST of
+            // the rule structure, not the matched node!
+            //var tokens = esprima.tokenize(this.toScript());
+            return this.rule.block.call(this);
+        },
+
+        toSampleBlockHTML: function() {
+            // Actually not the rule structure, but the gen
+            // structure (with pre-filled vars)
+        },
+
+        // TODO: Make this generic so that we can use this
+        // recursion for other areas, as well.
+        recurseRule: function() {
+            var rule = this.rule;
+            var match = this.match;
+
+            for (var i = 0; i < match._.length; i++) {
+                var singleMatch = match._[i];
+                if (_.isArray(singleMatch)) {
+                    this.handleArray(singleMatch);
+                } else {
+                    this.handleNode(singleMatch, match._, i);
+                }
+            }
+
+            for (var name in match.vars) {
+                var singleMatch = match.vars[name];
+                if (_.isArray(singleMatch)) {
+                    this.handleArray(singleMatch);
+                } else {
+                    this.handleNode(singleMatch, match._, i);
+                }
+            }
+        },
+
+        handleNode: function(node, obj, name) {
+            obj[name] = new Rule(node);
+        },
+
+        handleArray: function(nodes) {
+            for (var i = 0; i < nodes.length; i++) {
+                this.handleNode(nodes[i], nodes, i);
+            }
+        }
+    };
+
+    var ast = esprima.parse("var a = true;").body;
+    var matches = ast.map(function(node) {
+        return new Rule(node);
+    });
+    console.log(matches);
+
+    $(function() {
+        $("body").append(matches.map(function(match) {
+            return match.toBlockHTML();
+        }).join(""));
+    });
+
+    //console.log(JSON.stringify(Structured.match("var a = function(){};", function() { var _ = _; }), null, "    "));
+
+    var ifBlock = {
+        "type": "IfStatement",
+        "test": {
+            "type": "Literal",
+            "value": true
+        },
+        "consequent": {
+            "type": "BlockStatement",
+            "body": [
+                {
+                    "type": "VariableDeclaration",
+                    "declarations": [
+                        {
+                            "type": "VariableDeclarator",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "a"
+                            },
+                            "init": {
+                                "type": "Literal",
+                                "value": 5
+                            }
+                        }
+                    ],
+                    "kind": "var"
+                },
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "CallExpression",
+                        "callee": {
+                            "type": "Identifier",
+                            "name": "test"
+                        },
+                        "arguments": []
+                    }
+                }
+            ]
+        },
+        "alternate": null
+    };
+
+    /*
+    console.log(Structured.matchNode(ifBlock, {
+        "type": "IfStatement",
+        "test": {
+            "type": "Literal",
+            "value": true
+        },
+        "consequent": {
+            "type": "BlockStatement",
+            "body": []
+        },
+        "alternate": null
+    }), {
+        "_": [],
+        "vars": {},
+        "root": ifBlock
+    }, "Verify exact node match.");
+    */
+
+    /*
+    console.log(JSON.stringify(Structured.match("if(true){var x = 5;}", function() {
+        var x = $a;
+    }), null, "    "));
+    console.log(JSON.stringify(Structured.match("test(); if(true){var x = 5;}", function() {
+        if(true) { var x = _; }
+    }), null, "    "));
+    console.log(JSON.stringify(Structured.match("test(1,2,3);", function() {
+        _();
+    }), null, "    "));
+    */
+    /*
+    console.log(JSON.stringify(Structured.match("rect(10,true,'a',30);", function() {
+        rect($x,$y,$w,$h);
+    }), null, "    "));
+    */
+    /*
+    console.log(JSON.stringify(Structured.match(
+        "if(true){var a = 5; test();}",
+        function() {
+            if ($condition) {
+                glob$expressions;
+            }
+        }), null, "    "));
+    */
+    /*
+    Use for parsing user strings
+    handle: function(results) {
+        results.root.arguments.forEach(handleResult);
+    }
+    */
+
+    /*
+    console.log(JSON.stringify(Structured.injectData(function() {
+        if ($condition) {
+            glob$expressions;
+        }
+    }, {
+        vars: {
+            condition: {
+                "type": "Literal",
+                "value": true
+            },
+            expressions: [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "CallExpression",
+                        "callee": {
+                            "type": "Identifier",
+                            "name": "test"
+                        },
+                        "arguments": []
+                    }
+                }
+            ]
+        }
+    }), null, "    "));
+    */
+
+    </script>
+    <style>
+    .block {
+        border: 1px solid #000;
+        border-radius: 5px;
+        padding: 5px;
+        background: #EEE;
+    }
+
+    .block-inline {
+        display: inline-block;
+    }
+
+    .block-blank {
+        background: #FFF;
+        border: 2px solid #000;
+        display: inline-block;
+    }
+    </style>
+</body>
+</html>

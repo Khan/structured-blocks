@@ -1,0 +1,3 @@
+[submodule "external/structuredjs"]
+	path = external/structuredjs
+	url = git@github.com:Khan/structuredjs.git
