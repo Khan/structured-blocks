@@ -1,10 +1,12 @@
 var JSRules = {
     rules: [],
 
-    key: 1,
+    key: 0,
 
     addRule: function(rule) {
+        rule = React.createClass(rule);
         this.rules.push(rule);
+        return rule;
     },
 
     parseProgram: function(code) {
@@ -22,10 +24,12 @@ var JSRules = {
             var match = Structured.matchNode(node, rule.structure);
 
             if (match) {
+                this.keys += 1;
+
                 return React.createFactory(rule)({
                     node: match.root || node,
                     match: match,
-                    key: this.key++
+                    key: this.key
                 });
             }
         }
@@ -33,7 +37,7 @@ var JSRules = {
         throw new Error("No rule found for: " + JSON.stringify(node));
     },
 
-    toAST: function(fn) {
+    parseStructure: function(fn) {
         return esprima.parse("(" + fn + ")").body[0].expression.body.body[0];
     }
 };
@@ -94,18 +98,41 @@ var JSMixin = {
         }
     },
 
-    toAST: function() {
-        // find all _/glob_ and $../glob$.. tokens and
-        // recurse through and get the toAST of them, as well
-        // Check if rule has a toAST() and call that instead
+    toASTArray: function(array) {
+        return array.map(function(node) {
+            console.log(node)
+            return node.toAST();
+        });
+    },
+
+    toASTObject: function(object) {
+        var vars = {};
+
+        for (var key in this.state.vars) {
+            vars[key] = this.state.vars[key].toAST();
+        }
+
+        return vars;
     },
 
     toScript: function() {
         return escodegen.generate(this.toAST());
-    },
+    }
 };
 
-var JSProgram = React.createClass({
+var JSASTMixin = {
+    toAST: function() {
+        // find all _/glob_ and $../glob$.. tokens and
+        // recurse through and get the toAST of them, as well
+        // Check if rule has a toAST() and call that instead
+        return Structured.injectData(this.structure, {
+            _: this.toASTArray(this.state._ || []),
+            vars: this.toASTObject(this.state.vars || {})
+        });
+    }
+};
+
+var JSProgram = JSRules.addRule({
     mixins: [BlockMixin, JSMixin],
 
     statics: {
@@ -122,20 +149,26 @@ var JSProgram = React.createClass({
         };
     },
 
+    toAST: function() {
+        console.log("children", this.props.children)
+        return {
+            type: "Program",
+            body: this.toASTArray(this.state._)
+        };
+    },
+
     render: function() {
         return <div className="program">
-            <BlankStatements>{this.state._[0]}</BlankStatements>
+            <BlankStatements>{this.state._}</BlankStatements>
         </div>;
     }
 });
 
-JSRules.addRule(JSProgram);
-
-var JSVarAssignment = React.createClass({
-    mixins: [BlockMixin, JSMixin],
+var JSVarAssignment = JSRules.addRule({
+    mixins: [BlockMixin, JSMixin, JSASTMixin],
 
     statics: {
-        structure: JSRules.toAST(function() {
+        structure: JSRules.parseStructure(function() {
             var _ = _;
         })
     },
@@ -152,9 +185,7 @@ var JSVarAssignment = React.createClass({
     }
 });
 
-JSRules.addRule(JSVarAssignment);
-
-var JSIdentifier = React.createClass({
+var JSIdentifier = JSRules.addRule({
     mixins: [BlockMixin, JSMixin],
 
     statics: {
@@ -165,22 +196,32 @@ var JSIdentifier = React.createClass({
         return "variable";
     },
 
-    genMatch: function() {
+    getInitialState: function() {
         return {
-            _: [this.props.node.name]
+            name: this.props.node.name
         };
+    },
+
+    toAST: function() {
+        return {
+            type: "Identifier",
+            name: this.state.name
+        };
+    },
+
+    onChange: function(event) {
+        this.setState({name: event.target.value});
     },
 
     render: function() {
         return <div className="block block-inline">
-            <input type="text" defaultValue={this.state._[0]}/>
+            <input type="text" defaultValue={this.state.name}
+                onChange={this.onChange}/>
         </div>;
     }
 });
 
-JSRules.addRule(JSIdentifier);
-
-var JSLiteral = React.createClass({
+var JSLiteral = JSRules.addRule({
     mixins: [BlockMixin, JSMixin],
 
     statics: {
@@ -191,17 +232,27 @@ var JSLiteral = React.createClass({
         return typeof this.props.node.value;
     },
 
-    genMatch: function() {
+    getInitialState: function() {
         return {
-            _: [this.props.node.value]
+            value: this.props.node.value
         };
+    },
+
+    toAST: function() {
+        return {
+            type: "Literal",
+            name: this.state.value
+        };
+    },
+
+    onChange: function(event) {
+        this.setState({value: event.target.value});
     },
 
     render: function() {
         return <div className="block block-inline">
-            <input type="text" defaultValue={this.state._[0]}/>
+            <input type="text" defaultValue={this.state.value}
+                onChange={this.onChange}/>
         </div>;
     }
 });
-
-JSRules.addRule(JSLiteral);
