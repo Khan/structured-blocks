@@ -1,6 +1,5 @@
 var JSRules = {
     rules: [],
-
     key: 0,
 
     addRule: function(rule) {
@@ -10,31 +9,7 @@ var JSRules = {
     },
 
     parseProgram: function(code) {
-        var ast = esprima.parse(code);
-        return this.findRule(ast);
-    },
-
-    findRule: function(node) {
-        if (typeof node !== "object") {
-            return;
-        }
-
-        for (var r = 0; r < this.rules.length; r++) {
-            var rule = this.rules[r];
-            var match = Structured.matchNode(node, rule.structure);
-
-            if (match) {
-                this.keys += 1;
-
-                return React.createFactory(rule)({
-                    node: match.root || node,
-                    match: match,
-                    key: this.key
-                });
-            }
-        }
-
-        throw new Error("No rule found for: " + JSON.stringify(node));
+        return <JSRule node={esprima.parse(code)}/>;
     },
 
     parseStructure: function(fn) {
@@ -50,87 +25,117 @@ var JSMixin = {
             match = this.genMatch(match);
         }
 
-        // Convert matched nodes into React components
-        this.convertMatchToComponents(match);
+        match._ = match._ || [];
+        match.vars = match.vars || {};
 
-        return {
-            _: match._ || [],
-            vars: match.vars || {}
-        };
+        return match;
     },
 
-    // TODO: Make this generic so that we can use this
-    // recursion for other areas, as well.
-    convertMatchToComponents: function(match) {
-        if (match._) {
-            for (var i = 0; i < match._.length; i++) {
-                var singleMatch = match._[i];
-                if (_.isArray(singleMatch)) {
-                    this.handleMatchArray(singleMatch);
-                } else {
-                    this.handleMatch(singleMatch, match._, i);
-                }
-            }
+    getChildComponents: function(state) {
+        state = state || this.state;
+        var ret = {_: [], vars: {}};
+
+        for (var i = 0; i < state._.length; i++) {
+            var match = state._[i];
+            ret._[i] = _.isArray(match) ?
+                this.componentMatchArray(match, "_", i) :
+                this.componentMatch(match, "_", i);
         }
 
-        if (match.vars) {
-            for (var name in match.vars) {
-                var singleMatch = match.vars[name];
-                if (_.isArray(singleMatch)) {
-                    this.handleMatchArray(singleMatch);
-                } else {
-                    this.handleMatch(singleMatch, match._, i);
-                }
-            }
-        }
-    },
-
-    handleMatch: function(match, obj, name) {
-        var rule = JSRules.findRule(match);
-        if (rule) {
-            obj[name] = JSRules.findRule(match);
-        }
-    },
-
-    handleMatchArray: function(matches) {
-        for (var i = 0; i < matches.length; i++) {
-            this.handleMatch(matches[i], matches, i);
-        }
-    },
-
-    toASTArray: function(array) {
-        return array.map(function(node) {
-            console.log(node)
-            return node.toAST();
-        });
-    },
-
-    toASTObject: function(object) {
-        var vars = {};
-
-        for (var key in this.state.vars) {
-            vars[key] = this.state.vars[key].toAST();
+        for (var name in state.vars) {
+            var match = state.vars[name];
+            ret.vars[name] = _.isArray(match) ?
+                this.componentMatchArray(match, "vars", name) :
+                this.componentMatch(match, "vars", name);
         }
 
-        return vars;
+        return ret;
     },
 
-    toScript: function() {
-        return escodegen.generate(this.toAST());
+    componentMatch: function(match, ns, id) {
+        return <JSRule ref={ns + id} node={match}/>;
+    },
+
+    componentMatchArray: function(matches, ns, id) {
+        return matches.map(function(match, i) {
+            return this.componentMatch(match, ns, id + "-" + i);
+        }.bind(this));
+    },
+
+    getAST: function() {
+        var state = this.state;
+        var ret = {_: [], vars: {}};
+
+        for (var i = 0; i < state._.length; i++) {
+            var match = state._[i];
+            ret._[i] = _.isArray(match) ?
+                this.astComponentArray(match, "_", i) :
+                this.astComponent(match, "_", i);
+        }
+
+        for (var name in state.vars) {
+            var match = state.vars[name];
+            ret.vars[name] = _.isArray(match) ?
+                this.astComponentArray(match, "vars", name) :
+                this.astComponent(match, "vars", name);
+        }
+
+        return ret;
+    },
+
+    astComponent: function(match, ns, id) {
+        return this.refs[ns + id].toAST();
+    },
+
+    astComponentArray: function(matches, ns, id) {
+        return matches.map(function(match, i) {
+            return this.astComponent(match, ns, id + "-" + i);
+        }.bind(this));
     }
 };
 
 var JSASTMixin = {
     toAST: function() {
-        // find all _/glob_ and $../glob$.. tokens and
-        // recurse through and get the toAST of them, as well
-        // Check if rule has a toAST() and call that instead
-        return Structured.injectData(this.structure, {
-            _: this.toASTArray(this.state._ || []),
-            vars: this.toASTObject(this.state.vars || {})
-        });
+        return Structured.injectData(this.props.structure, this.getAST());
     }
 };
+
+var JSRule = React.createClass({
+    toAST: function() {
+        return this.refs.child.toAST();
+    },
+
+    toScript: function() {
+        return escodegen.generate(this.toAST());
+    },
+
+    render: function() {
+        var node = this.props.node;
+
+        if (typeof node !== "object") {
+            return;
+        }
+
+        for (var r = 0; r < JSRules.rules.length; r++) {
+            var rule = JSRules.rules[r];
+            var match = Structured.matchNode(node, rule.structure);
+
+            if (match) {
+                JSRules.keys += 1;
+
+                return React.createFactory(rule)({
+                    node: node,
+                    match: match,
+                    structure: rule.structure,
+                    key: JSRules.key,
+                    ref: "child"
+                });
+            }
+        }
+
+        throw new Error("No rule found for: " + JSON.stringify(node));
+    }
+});
 
 var JSProgram = JSRules.addRule({
     mixins: [BlockMixin, JSMixin],
@@ -145,21 +150,22 @@ var JSProgram = JSRules.addRule({
 
     genMatch: function(node) {
         return {
-            _: this.props.node.body
+            _: [this.props.node.body]
         };
     },
 
     toAST: function() {
-        console.log("children", this.props.children)
+        var ast = this.getAST();
         return {
             type: "Program",
-            body: this.toASTArray(this.state._)
+            body: ast._[0]
         };
     },
 
     render: function() {
+        var children = this.getChildComponents();
         return <div className="program">
-            <BlankStatements>{this.state._}</BlankStatements>
+            <BlankStatements>{children._}</BlankStatements>
         </div>;
     }
 });
@@ -178,9 +184,10 @@ var JSVarAssignment = JSRules.addRule({
     },
 
     render: function() {
+        var children = this.getChildComponents();
         return <div className="block block-statement">
-            {'var '}{this.state._[0]}
-            {' = '}<BlankInput>{this.state._[1]}</BlankInput>{';'}
+            {'var '}{children._[0]}
+            {' = '}<BlankInput>{children._[1]}</BlankInput>{';'}
         </div>;
     }
 });
@@ -196,26 +203,28 @@ var JSIdentifier = JSRules.addRule({
         return "variable";
     },
 
-    getInitialState: function() {
+    genMatch: function() {
         return {
-            name: this.props.node.name
+            vars: {
+                name: this.props.node.name
+            }
         };
     },
 
     toAST: function() {
         return {
             type: "Identifier",
-            name: this.state.name
+            name: this.state.vars.name
         };
     },
 
     onChange: function(event) {
-        this.setState({name: event.target.value});
+        this.setState({vars: {name: event.target.value}});
     },
 
     render: function() {
         return <div className="block block-inline">
-            <input type="text" defaultValue={this.state.name}
+            <input type="text" defaultValue={this.state.vars.name}
                 onChange={this.onChange}/>
         </div>;
     }
@@ -232,26 +241,37 @@ var JSLiteral = JSRules.addRule({
         return typeof this.props.node.value;
     },
 
-    getInitialState: function() {
+    genMatch: function() {
         return {
-            value: this.props.node.value
+            vars: {
+                value: this.props.node.value
+            }
         };
     },
 
     toAST: function() {
         return {
             type: "Literal",
-            name: this.state.value
+            value: this.state.vars.value
         };
     },
 
     onChange: function(event) {
-        this.setState({value: event.target.value});
+        var val = event.target.value;
+        var type = this.getType();
+
+        if (type === "boolean") {
+            val = (val === "true");
+        } else if (type === "number") {
+            val = parseFloat(val);
+        }
+
+        this.setState({vars: {value: val}});
     },
 
     render: function() {
         return <div className="block block-inline">
-            <input type="text" defaultValue={this.state.value}
+            <input type="text" defaultValue={this.state.vars.value}
                 onChange={this.onChange}/>
         </div>;
     }

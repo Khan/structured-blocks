@@ -36,11 +36,17 @@
         //console.log(program)
         window.rule = React.render(
             JSRules.parseProgram("var a = true;"),
-            document.body
+            $("#structured-blocks")[0]
         );
+
+        setInterval(function() {
+            $("#output").val(rule.toScript());
+        }, 100);
     });
     </script>
 </head>
 <body>
+    <div id="structured-blocks"></div>
+    <textarea id="output"></textarea>
 </body>
 </html>
