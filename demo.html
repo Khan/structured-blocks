@@ -29,13 +29,12 @@
     <script src="http://fb.me/react-0.12.0-rc1.js"></script>
     <script src="build/structured-blocks.js"></script>
     <script src="build/js-rules.js"></script>
+    <script src="build/pjs-rules.js"></script>
     <!--<script src="tests.js"></script>-->
     <script>
     $(function() {
-        //var program = JSRules.parseProgram("var a = true;");
-        //console.log(program)
         window.rule = React.render(
-            JSRules.parseProgram("var a = true;"),
+            JSRules.parseProgram("var a = true;\nellipse(10, 20, 30, 40);"),
             $("#structured-blocks")[0]
         );
 
