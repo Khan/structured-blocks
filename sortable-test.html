@@ -1,0 +1,85 @@
+<html>
+<head>
+    <link rel="stylesheet" href="external/structuredjs/external/qunit.css"/>
+    <style>
+    .block {
+        border: 1px solid #000;
+        border-radius: 5px;
+        padding: 5px;
+        background: #EEE;
+    }
+
+    .block-inline {
+        display: inline-block;
+    }
+
+    .block-blank {
+        background: #FFF;
+        border: 2px solid #000;
+        display: inline-block;
+    }
+    
+    .from, .to {
+        width: 400px;
+        height: 400px;
+        float: left;
+        border: 1px solid #000;
+    }
+
+    .from {
+        background: red;
+    }
+
+    .to {
+        background: green;
+    }
+
+    .item {
+        height: 20px;
+        background: #FFF;
+        margin: 5px;
+        padding: 5px;
+    }
+
+    .sortable-dragging.sortable-outside .item {
+        background: black;
+    }
+
+    ol {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    li {
+        display: block;
+    }
+    </style>
+
+    <script src="external/structuredjs/external/jquery.min.js"></script>
+    <script src="external/structuredjs/external/underscore.min.js"></script>
+    <script src="external/structuredjs/external/esprima.js"></script>
+    <script src="external/structuredjs/structured.js"></script>
+    <script src="external/structuredjs/external/qunit.js"></script>
+    <script src="external/escodegen.browser.js"></script>
+    <script src="external/react-0.12.0-rc1.js"></script>
+    <script src="build/sortable.js"></script>
+</head>
+<body>
+    <div id="output"></div>
+    <div id="drag-coveredup" class="dragdemo" draggable="true">drag me</div>
+    <script>
+    document.getElementById("drag-coveredup").addEventListener("dragstart", function(e) {
+        var crt = this.cloneNode(true);
+        crt.style.backgroundColor = "red";
+        crt.style.position = "absolute"; crt.style.top = "0px"; crt.style.right = "0px";
+        document.body.appendChild(crt);
+        e.dataTransfer.setDragImage(crt, 0, 0);
+        setTimeout(function() {
+            document.body.removeChild(crt);
+        }, 0)
+        
+    }, false);
+    </script>
+</body>
+</html>
