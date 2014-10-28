@@ -31,16 +31,17 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
         verify: PT.func
     },
     render: function() {
-        var sortables = _(this.state.components).map(function(component, index) 
-            {return React.createElement(SortableItem, {
+        var sortables = _(this.state.components).map(function(component, index) {
+            return React.createElement(SortableItem, {
                 index: index, 
+                data: component.props.data, 
                 component: component, 
                 area: this, 
                 key: component.key, 
                 outside: this.state.outside, 
                 draggable: component.props.draggable, 
-                dragging: index === this.state.dragging});}.bind(this)
-        );
+                dragging: index === this.state.dragging})
+        }.bind(this));
         return React.createElement("ol", {className: this.props.className, style: this.props.style, 
             onDragEnter: this.dragEnter, 
             onDragLeave: this.dragLeave, 
@@ -62,12 +63,19 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
         return {
             // index of the component being dragged
             dragging: null,
-            components: this.props.components,
+            components: this.mapComponents(this.props.components),
             outside: false
         };
     },
     componentWillReceiveProps: function(nextProps) {
-        this.setState({ components: nextProps.components });
+        this.setState({
+            components: this.mapComponents(nextProps.components)
+        });
+    },
+    mapComponents: function(components) {
+        return components.map(function(data) {
+            return this.props.genComponent(data);
+        }.bind(this));
     },
     isDragging: function() {
         return (this.state.dragging === null);
@@ -249,7 +257,7 @@ window.SortableItem = React.createClass({displayName: 'SortableItem',
         );
     },
     handleDragStart: function(e) {
-        SortableItem.curDragData = "var a = true;";
+        SortableItem.curDragData = this.props.data;
         e.nativeEvent.dataTransfer.effectAllowed = "move";
         this.props.area.onDragStart(this.props.index);
     },
@@ -276,7 +284,8 @@ var FromToContainer = React.createClass({displayName: 'FromToContainer',
         return React.createElement("div", null, 
             React.createElement(ToContainer, {components: this.props.to, 
                 genComponent: this.props.genComponent}), 
-            React.createElement(FromContainer, {components: this.props.from})
+            React.createElement(FromContainer, {components: this.props.from, 
+                genComponent: this.props.genComponent})
         );
     }
 });
@@ -293,6 +302,7 @@ var FromContainer = React.createClass({displayName: 'FromContainer',
             React.createElement(SortableArea, {
                 className: "from", 
                 components: this.props.components, 
+                genComponent: this.props.genComponent, 
                 onReorder: function()  {return true;}, 
                 reorder: false})
         );
@@ -317,17 +327,8 @@ $(function() {
         return React.createElement(DragItem, {data: data, key: key++, draggable: true});
     };
 
-    var from = [
-        genDragItem("1"),
-        genDragItem("2"),
-        genDragItem("3")
-    ];
-
-    var to = [
-        genDragItem("4"),
-        genDragItem("5"),
-        genDragItem("6")
-    ];
+    var from = ["1", "2", "3"];
+    var to = ["4", "5", "6"];
 
     React.render(
         React.createElement(FromToContainer, {from: from, to: to, 

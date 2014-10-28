@@ -26,7 +26,7 @@ var sortableDisabled = userSelect("none");
 // Takes an array of components to sort
 window.SortableArea = React.createClass({
     propTypes: {
-        components: PT.arrayOf(PT.node).isRequired,
+        data: PT.array.isRequired,
         onReorder: PT.func.isRequired,
         verify: PT.func
     },
@@ -34,13 +34,14 @@ window.SortableArea = React.createClass({
         var sortables = _(this.state.components).map((component, index) =>
             <SortableItem
                 index={index}
+                data={component.props.data}
                 component={component}
                 area={this}
                 key={component.key}
                 outside={this.state.outside}
                 draggable={component.props.draggable}
                 dragging={index === this.state.dragging} />
-        );
+        });
         return <ol className={this.props.className} style={this.props.style}
             onDragEnter={this.dragEnter}
             onDragLeave={this.dragLeave}
@@ -62,12 +63,19 @@ window.SortableArea = React.createClass({
         return {
             // index of the component being dragged
             dragging: null,
-            components: this.props.components,
+            components: this.mapComponents(this.props.data),
             outside: false
         };
     },
     componentWillReceiveProps: function(nextProps) {
-        this.setState({ components: nextProps.components });
+        this.setState({
+            components: this.mapComponents(nextProps.data)
+        });
+    },
+    mapComponents: function(components) {
+        return components.map(function(data) {
+            return this.props.genComponent(data);
+        }.bind(this));
     },
     isDragging: function() {
         return (this.state.dragging === null);
@@ -249,7 +257,7 @@ window.SortableItem = React.createClass({
         </li>;
     },
     handleDragStart: function(e) {
-        SortableItem.curDragData = "var a = true;";
+        SortableItem.curDragData = this.props.data;
         e.nativeEvent.dataTransfer.effectAllowed = "move";
         this.props.area.onDragStart(this.props.index);
     },
@@ -276,7 +284,8 @@ var FromToContainer = React.createClass({
         return <div>
             <ToContainer components={this.props.to}
                 genComponent={this.props.genComponent}/>
-            <FromContainer components={this.props.from}/>
+            <FromContainer components={this.props.from}
+                genComponent={this.props.genComponent}/>
         </div>;
     }
 });
@@ -292,7 +301,8 @@ var FromContainer = React.createClass({
         return <div className="from">
             <SortableArea
                 className="from"
-                components={this.props.components}
+                data={this.props.data}
+                genComponent={this.props.genComponent}
                 onReorder={() => true}
                 reorder={false}/>
         </div>;
@@ -304,7 +314,7 @@ var ToContainer = React.createClass({
         return <div className="to">
             <SortableArea
                 className="to"
-                components={this.props.components}
+                data={this.props.data}
                 genComponent={this.props.genComponent}
                 onReorder={() => true}/>
         </div>;
@@ -317,17 +327,8 @@ $(function() {
         return <DragItem data={data} key={key++} draggable={true}/>;
     };
 
-    var from = [
-        genDragItem("1"),
-        genDragItem("2"),
-        genDragItem("3")
-    ];
-
-    var to = [
-        genDragItem("4"),
-        genDragItem("5"),
-        genDragItem("6")
-    ];
+    var from = ["1", "2", "3"];
+    var to = ["4", "5", "6"];
 
     React.render(
         <FromToContainer from={from} to={to}
