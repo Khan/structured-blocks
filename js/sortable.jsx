@@ -41,7 +41,7 @@ window.SortableArea = React.createClass({
                 outside={this.state.outside}
                 draggable={component.props.draggable}
                 dragging={index === this.state.dragging} />
-        });
+        );
         return <ol className={this.props.className} style={this.props.style}
             onDragEnter={this.dragEnter}
             onDragLeave={this.dragLeave}
@@ -78,7 +78,7 @@ window.SortableArea = React.createClass({
         }.bind(this));
     },
     isDragging: function() {
-        return (this.state.dragging === null);
+        return (this.state.dragging !== null);
     },
     dragEnter: function(e) {
         if (this.dragDepth === 0) {
@@ -96,11 +96,7 @@ window.SortableArea = React.createClass({
         }
     },
     handleDragEnter: function(e) {
-        if (this.isDragging()) {
-            if (this.state.itemAdded) {
-                return;
-            }
-
+        if (!this.isDragging()) {
             var index = this.state.components.length;
             var data = SortableItem.curDragData;
             var component = this.props.genComponent(data);
@@ -111,7 +107,7 @@ window.SortableArea = React.createClass({
                 components: this.state.components.concat([component])
             });
         } else {
-            this.setState({ outside: false, updateCursor: e.dataTransfer });
+            this.setState({ outside: false });
         }
     },
     handleDragLeave: function(e) {
@@ -121,14 +117,13 @@ window.SortableArea = React.createClass({
             var itemPos = components.indexOf(component);
             components.splice(itemPos, 1)
             this.setState({
+                outside: false,
                 components: components,
                 itemAdded: false,
                 dragging: null
             });
-        }
-
-        if (!this.isDragging()) {
-            //this.setState({ outside: true, updateCursor: e.dataTransfer });
+        } else if (this.isDragging()) {
+            this.setState({ outside: true });
         }
     },
     dragOver: function(e) {
@@ -170,7 +165,7 @@ window.SortableArea = React.createClass({
         // When a label is first dragged it triggers a dragEnter with itself,
         // which we don't care about.
         if (this.state.dragging === enterIndex ||
-                this.isDragging() ||
+                !this.isDragging() ||
                 !this.props.reorder) {
             return;
         }
@@ -200,8 +195,8 @@ window.SortableArea = React.createClass({
     componentDidUpdate: function() {
         this._setDragEvents();
         if (this.state.updateCursor) {
-            this.state.updateCursor.setDragImage(
-                this.getDOMNode().querySelector(".sortable-dragging").firstChild, 0, 0);
+            //this.state.updateCursor.setDragImage(
+            //    this.getDOMNode().querySelector(".sortable-dragging").firstChild, 0, 0);
             this.setState({ updateCursor: false });
         }
     },
@@ -282,9 +277,9 @@ window.SortableItem = React.createClass({
 var FromToContainer = React.createClass({
     render: function() {
         return <div>
-            <ToContainer components={this.props.to}
+            <ToContainer data={this.props.to}
                 genComponent={this.props.genComponent}/>
-            <FromContainer components={this.props.from}
+            <FromContainer data={this.props.from}
                 genComponent={this.props.genComponent}/>
         </div>;
     }
@@ -320,6 +315,9 @@ var ToContainer = React.createClass({
         </div>;
     }
 });
+
+// TODO: Destory To drag on leave drop
+// TODO: Don't accept items in the From container
 
 $(function() {
     var key = 1;
