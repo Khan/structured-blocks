@@ -45,7 +45,8 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
             onDragEnter: this.dragEnter, 
             onDragLeave: this.dragLeave, 
             onDragOver: this.dragOver, 
-            onDragEnd: this.dragEnd}, 
+            onDragEnd: this.dragEnd, 
+            onDrop: this.drop}, 
             sortables
         );
     },
@@ -56,6 +57,8 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
         };
     },
     getInitialState: function() {
+        this.dragDepth = 0;
+
         return {
             // index of the component being dragged
             dragging: null,
@@ -66,57 +69,45 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
     componentWillReceiveProps: function(nextProps) {
         this.setState({ components: nextProps.components });
     },
+    isDragging: function() {
+        return (this.state.dragging === null);
+    },
     dragEnter: function(e) {
-        console.log("dragEnter", e.target)
-        // Ignore bubbled events
-        if (e.target !== this.getDOMNode()) {
-            this.ignoreNextLeave = true;
-            return;
-        }
-
-        console.log("thx", SortableItem.curDragData, this.state.dragging, this.state.itemAdded)
-
-        var data = SortableItem.curDragData;
-        if (data) {
+        if (this.dragDepth === 0) {
             e.preventDefault();
-
-            if (this.state.dragging === null) {
-                if (this.state.itemAdded) {
-                    return;
-                }
-
-                console.log("dragEnter!!!!", data, e.target)
-
-                var index = this.state.components.length;
-                var component = this.props.genComponent(data);
-
-                this.setState({
-                    itemAdded: component,
-                    dragging: index,
-                    components: this.state.components.concat([component])
-                });
-            } else {
-                this.setState({ outside: false, updateCursor: e.dataTransfer });
-            }
+            this.handleDragEnter(e);
         }
+
+        this.dragDepth += 1;
     },
     dragLeave: function(e) {
-        if (this.ignoreNextLeave) {
-            this.ignoreNextLeave = false;
-            return;
+        this.dragDepth -= 1;
+
+        if (this.dragDepth === 0) {
+            this.handleDragLeave(e);
         }
+    },
+    handleDragEnter: function(e) {
+        if (this.isDragging()) {
+            if (this.state.itemAdded) {
+                return;
+            }
 
-        console.log("dragLeave", e.target, this.getDOMNode())
-        // Ignore bubbled events
-        if (e.target !== this.getDOMNode()) {
-            return;
+            var index = this.state.components.length;
+            var data = SortableItem.curDragData;
+            var component = this.props.genComponent(data);
+
+            this.setState({
+                itemAdded: component,
+                dragging: index,
+                components: this.state.components.concat([component])
+            });
+        } else {
+            this.setState({ outside: false, updateCursor: e.dataTransfer });
         }
-
-        console.log("dragLeave")
-
+    },
+    handleDragLeave: function(e) {
         if (this.state.itemAdded) {
-            console.log("remove added item");
-            // TODO: Also remove item
             var component = this.state.itemAdded;
             var components = this.state.components;
             var itemPos = components.indexOf(component);
@@ -128,28 +119,30 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
             });
         }
 
-        if (this.state.dragging === null) {
-            console.log("not active")
-
-        } else {
-            //console.log("going outside", this.state.dragging, e.relatedTarget)
+        if (!this.isDragging()) {
             //this.setState({ outside: true, updateCursor: e.dataTransfer });
         }
     },
     dragOver: function(e) {
-        //console.log("dragOver", e, e.nativeEvent)
         // We only want to accept text being copied over
         if (SortableItem.curDragData) {
             e.preventDefault();
         }
     },
-    dragEnd: function(e) {
-        console.log("dragEnd")
+    reset: function() {
+        this.dragDepth = 0;
+
         this.setState({
             itemAdded: false,
             dragging: null,
             outside: false
         });
+    },
+    dragEnd: function(e) {
+        this.reset();
+    },
+    drop: function(e) {
+        this.reset();
     },
     // Alternatively send each handler to each component individually,
     // partially applied
@@ -161,21 +154,15 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
         });
     },
     onDragEnd: function() {
-        console.log("onDragEnd");
+        this.reset();
         // tell the parent component
-        this.setState({
-            itemAdded: false,
-            dragging: null,
-            outside: false
-        });
         this.props.onReorder(this.state.components);
     },
     onDragEnter: function(enterIndex) {
-        console.log("onDragEnter", enterIndex)
         // When a label is first dragged it triggers a dragEnter with itself,
         // which we don't care about.
         if (this.state.dragging === enterIndex ||
-                this.state.dragging === null ||
+                this.isDragging() ||
                 !this.props.reorder) {
             return;
         }
@@ -205,7 +192,6 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
     componentDidUpdate: function() {
         this._setDragEvents();
         if (this.state.updateCursor) {
-            console.log("Updating cursor")
             this.state.updateCursor.setDragImage(
                 this.getDOMNode().querySelector(".sortable-dragging").firstChild, 0, 0);
             this.setState({ updateCursor: false });
@@ -258,7 +244,6 @@ window.SortableItem = React.createClass({displayName: 'SortableItem',
                    onDragStart: this.handleDragStart, 
                    onDragEnd: this.handleDragEnd, 
                    onDragEnter: this.handleDragEnter, 
-                   onDragLeave: this.handleDragLeave, 
                    onDragOver: this.handleDragOver}, 
             this.props.component
         );
@@ -277,9 +262,6 @@ window.SortableItem = React.createClass({displayName: 'SortableItem',
         // Ideally this would change the cursor based on whether this is a
         // valid place to drop.
         e.nativeEvent.dataTransfer.effectAllowed = verified ? "move" : "none";
-    },
-    handleDragLeave: function() {
-        console.log("local dragLeave")
     },
     handleDragOver: function(e) {
         // allow a drop by preventing default handling
@@ -309,6 +291,7 @@ var FromContainer = React.createClass({displayName: 'FromContainer',
     render: function() {
         return React.createElement("div", {className: "from"}, 
             React.createElement(SortableArea, {
+                className: "from", 
                 components: this.props.components, 
                 onReorder: function()  {return true;}, 
                 reorder: false})
@@ -320,6 +303,7 @@ var ToContainer = React.createClass({displayName: 'ToContainer',
     render: function() {
         return React.createElement("div", {className: "to"}, 
             React.createElement(SortableArea, {
+                className: "to", 
                 components: this.props.components, 
                 genComponent: this.props.genComponent, 
                 onReorder: function()  {return true;}})
