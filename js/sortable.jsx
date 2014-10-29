@@ -81,6 +81,10 @@ window.SortableArea = React.createClass({
         return (this.state.dragging !== null);
     },
     dragEnter: function(e) {
+        if (!this.props.accept) {
+            return;
+        }
+
         if (this.dragDepth === 0) {
             e.preventDefault();
             this.handleDragEnter(e);
@@ -89,6 +93,10 @@ window.SortableArea = React.createClass({
         this.dragDepth += 1;
     },
     dragLeave: function(e) {
+        if (!this.props.accept) {
+            return;
+        }
+
         this.dragDepth -= 1;
 
         if (this.dragDepth === 0) {
@@ -195,8 +203,7 @@ window.SortableArea = React.createClass({
     componentDidUpdate: function() {
         this._setDragEvents();
         if (this.state.updateCursor) {
-            //this.state.updateCursor.setDragImage(
-            //    this.getDOMNode().querySelector(".sortable-dragging").firstChild, 0, 0);
+            // TODO: Find a way to show a new cursor?
             this.setState({ updateCursor: false });
         }
     },
@@ -273,64 +280,3 @@ window.SortableItem = React.createClass({
 });
 
 })();
-
-var FromToContainer = React.createClass({
-    render: function() {
-        return <div>
-            <ToContainer data={this.props.to}
-                genComponent={this.props.genComponent}/>
-            <FromContainer data={this.props.from}
-                genComponent={this.props.genComponent}/>
-        </div>;
-    }
-});
-
-var DragItem = React.createClass({
-    render: function() {
-        return <div className="item">{this.props.data}</div>;
-    }
-});
-
-var FromContainer = React.createClass({
-    render: function() {
-        return <div className="from">
-            <SortableArea
-                className="from"
-                data={this.props.data}
-                genComponent={this.props.genComponent}
-                onReorder={() => true}
-                reorder={false}/>
-        </div>;
-    }
-});
-
-var ToContainer = React.createClass({
-    render: function() {
-        return <div className="to">
-            <SortableArea
-                className="to"
-                data={this.props.data}
-                genComponent={this.props.genComponent}
-                onReorder={() => true}/>
-        </div>;
-    }
-});
-
-// TODO: Destory To drag on leave drop
-// TODO: Don't accept items in the From container
-
-$(function() {
-    var key = 1;
-    var genDragItem = function(data) {
-        return <DragItem data={data} key={key++} draggable={true}/>;
-    };
-
-    var from = ["1", "2", "3"];
-    var to = ["4", "5", "6"];
-
-    React.render(
-        <FromToContainer from={from} to={to}
-            genComponent={genDragItem}/>,
-        $("#output")[0]
-    );
-});

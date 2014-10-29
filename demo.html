@@ -3,10 +3,7 @@
     <link rel="stylesheet" href="external/structuredjs/external/qunit.css"/>
     <style>
     .block {
-        border: 1px solid #000;
-        border-radius: 5px;
-        padding: 5px;
-        background: #EEE;
+        background: #FFF;
     }
 
     .block-inline {
@@ -15,8 +12,40 @@
 
     .block-blank {
         background: #FFF;
-        border: 2px solid #000;
         display: inline-block;
+    }
+
+    .from, .to {
+        width: 400px;
+        height: 400px;
+        float: left;
+        border: 1px solid #000;
+    }
+
+    .from {
+        background: red;
+    }
+
+    .to {
+        background: green;
+    }
+
+    .from .sortable-dragging {
+        opacity: 0.7;
+    }
+
+    .to .sortable-dragging > * {
+        outline: 1px solid red;
+    }
+
+    ol {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    li {
+        display: block;
     }
     </style>
 
@@ -27,23 +56,13 @@
     <script src="external/structuredjs/external/qunit.js"></script>
     <script src="external/escodegen.browser.js"></script>
     <script src="external/react-0.12.0-rc1.js"></script>
+    <script src="build/sortable.js"></script>
     <script src="build/structured-blocks.js"></script>
     <script src="build/structured-js.js"></script>
     <script src="build/js-rules.js"></script>
     <script src="build/pjs-rules.js"></script>
+    <script src="build/demo.js"></script>
     <!--<script src="tests.js"></script>-->
-    <script>
-    $(function() {
-        window.rule = React.render(
-            JSRules.parseProgram("var a = true;\nellipse(10, 20, 30, 40);"),
-            $("#structured-blocks")[0]
-        );
-
-        setInterval(function() {
-            $("#output").val(rule.toScript());
-        }, 100);
-    });
-    </script>
 </head>
 <body>
     <div id="structured-blocks"></div>

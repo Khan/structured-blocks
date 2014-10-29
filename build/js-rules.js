@@ -84,9 +84,10 @@ var JSIdentifier = JSRules.addRule({
     },
 
     render: function() {
-        return React.createElement("div", {className: "block block-inline"}, 
-            React.createElement("input", {type: "text", defaultValue: this.state.vars.name, 
-                onChange: this.onChange})
+        var name = this.state.vars.name;
+        return React.createElement("div", {className: "block block-inline block-variable"}, 
+            React.createElement("input", {type: "text", defaultValue: name, 
+                onChange: this.onChange, size: name.toString().length})
         );
     }
 });
@@ -131,9 +132,10 @@ var JSLiteral = JSRules.addRule({
     },
 
     render: function() {
-        return React.createElement("div", {className: "block block-inline"}, 
+        var val = this.props.node.value;
+        return React.createElement("div", {className: "block block-inline block-" + this.getType()}, 
             React.createElement("input", {type: "text", defaultValue: this.state.vars.value, 
-                onChange: this.onChange})
+                onChange: this.onChange, size: val.toString().length})
         );
     }
 });

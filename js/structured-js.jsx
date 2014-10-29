@@ -1,6 +1,5 @@
 var JSRules = {
     rules: [],
-    key: 0,
 
     addRule: function(rule) {
         rule = React.createClass(rule);
@@ -9,7 +8,7 @@ var JSRules = {
     },
 
     parseProgram: function(code) {
-        return <JSRule node={esprima.parse(code)}/>;
+        return esprima.parse(code).body;
     },
 
     parseStructure: function(fn) {
@@ -53,7 +52,7 @@ var JSMixin = {
     },
 
     componentMatch: function(match, ns, id) {
-        return <JSRule ref={ns + id} node={match}/>;
+        return <JSRule ref={ns + id} data={match}/>;
     },
 
     componentMatchArray: function(matches, ns, id) {
@@ -110,7 +109,7 @@ var JSRule = React.createClass({
     },
 
     render: function() {
-        var node = this.props.node;
+        var node = this.props.data;
 
         if (typeof node !== "object") {
             return;
@@ -121,14 +120,12 @@ var JSRule = React.createClass({
             var match = Structured.matchNode(node, rule.structure);
 
             if (match) {
-                JSRules.keys += 1;
-
                 return React.createFactory(rule)({
                     node: node,
                     match: match,
                     structure: rule.structure,
-                    key: JSRules.key,
-                    ref: "child"
+                    ref: "child",
+                    draggable: true
                 });
             }
         }

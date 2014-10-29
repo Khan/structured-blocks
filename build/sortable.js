@@ -81,6 +81,10 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
         return (this.state.dragging !== null);
     },
     dragEnter: function(e) {
+        if (!this.props.accept) {
+            return;
+        }
+
         if (this.dragDepth === 0) {
             e.preventDefault();
             this.handleDragEnter(e);
@@ -89,6 +93,10 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
         this.dragDepth += 1;
     },
     dragLeave: function(e) {
+        if (!this.props.accept) {
+            return;
+        }
+
         this.dragDepth -= 1;
 
         if (this.dragDepth === 0) {
@@ -195,8 +203,7 @@ window.SortableArea = React.createClass({displayName: 'SortableArea',
     componentDidUpdate: function() {
         this._setDragEvents();
         if (this.state.updateCursor) {
-            //this.state.updateCursor.setDragImage(
-            //    this.getDOMNode().querySelector(".sortable-dragging").firstChild, 0, 0);
+            // TODO: Find a way to show a new cursor?
             this.setState({ updateCursor: false });
         }
     },
@@ -273,64 +280,3 @@ window.SortableItem = React.createClass({displayName: 'SortableItem',
 });
 
 })();
-
-var FromToContainer = React.createClass({displayName: 'FromToContainer',
-    render: function() {
-        return React.createElement("div", null, 
-            React.createElement(ToContainer, {data: this.props.to, 
-                genComponent: this.props.genComponent}), 
-            React.createElement(FromContainer, {data: this.props.from, 
-                genComponent: this.props.genComponent})
-        );
-    }
-});
-
-var DragItem = React.createClass({displayName: 'DragItem',
-    render: function() {
-        return React.createElement("div", {className: "item"}, this.props.data);
-    }
-});
-
-var FromContainer = React.createClass({displayName: 'FromContainer',
-    render: function() {
-        return React.createElement("div", {className: "from"}, 
-            React.createElement(SortableArea, {
-                className: "from", 
-                data: this.props.data, 
-                genComponent: this.props.genComponent, 
-                onReorder: function()  {return true;}, 
-                reorder: false})
-        );
-    }
-});
-
-var ToContainer = React.createClass({displayName: 'ToContainer',
-    render: function() {
-        return React.createElement("div", {className: "to"}, 
-            React.createElement(SortableArea, {
-                className: "to", 
-                data: this.props.data, 
-                genComponent: this.props.genComponent, 
-                onReorder: function()  {return true;}})
-        );
-    }
-});
-
-// TODO: Destory To drag on leave drop
-// TODO: Don't accept items in the From container
-
-$(function() {
-    var key = 1;
-    var genDragItem = function(data) {
-        return React.createElement(DragItem, {data: data, key: key++, draggable: true});
-    };
-
-    var from = ["1", "2", "3"];
-    var to = ["4", "5", "6"];
-
-    React.render(
-        React.createElement(FromToContainer, {from: from, to: to, 
-            genComponent: genDragItem}),
-        $("#output")[0]
-    );
-});
