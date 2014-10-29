@@ -132,6 +132,17 @@ var JSLiteral = JSRules.addRule({
     },
 
     onBlur: function(event) {
+        this.deactivate();
+    },
+
+    onKeyDown: function(e) {
+        if (e.keyCode === 13) {
+            e.preventDefault();
+            this.deactivate();
+        }
+    },
+
+    deactivate: function() {
         this.setState({ active: false });
     },
 
@@ -164,7 +175,8 @@ var JSLiteral = JSRules.addRule({
                 defaultValue={this.props.node.value}
                 size={val.toString().length}
                 onChange={this.onChange}
-                onBlur={this.onBlur}/>
+                onBlur={this.onBlur}
+                onKeyDown={this.onKeyDown}/>
         </div>;
     }
 });
