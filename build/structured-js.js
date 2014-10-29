@@ -52,7 +52,8 @@ var JSMixin = {
     },
 
     componentMatch: function(match, ns, id) {
-        return React.createElement(JSRule, {ref: ns + id, data: match});
+        return React.createElement(JSRule, {ref: ns + id, data: match, 
+            editable: this.props.editable});
     },
 
     componentMatchArray: function(matches, ns, id) {
@@ -125,7 +126,8 @@ var JSRule = React.createClass({displayName: 'JSRule',
                     match: match,
                     structure: rule.structure,
                     ref: "child",
-                    draggable: true
+                    draggable: true,
+                    editable: this.props.editable
                 });
             }
         }

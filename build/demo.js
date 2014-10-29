@@ -5,12 +5,14 @@ var FromToContainer = React.createClass({displayName: 'FromToContainer',
                 className: "to", 
                 data: this.props.to, 
                 accept: true, 
+                editable: true, 
                 genComponent: this.props.genComponent, 
                 onReorder: function()  {return true;}}), 
             React.createElement(SortableArea, {
                 className: "from", 
                 data: this.props.from, 
                 accept: false, 
+                editable: false, 
                 genComponent: this.props.genComponent, 
                 onReorder: function()  {return true;}, 
                 reorder: false})
@@ -20,18 +22,23 @@ var FromToContainer = React.createClass({displayName: 'FromToContainer',
 
 // TODO: Generate blocks for statements from AST automatically
 
-// TODO: Destory To drag on leave drop
 // TODO: Generate AST/Code
+
+// TODO: Sync position of element immediately on initial drag in
+
+// TODO: Destroy To drag on leave drop
 // TODO: Find a way to drag sub-components
 //  - Be able to move a sub-component into another blank
 //    - Limit it by the "type" and the accepted type
 //  - Be able to "destroy" an existing sub-component - some how?
-//
+
+// TODO: Find a way to dynamically manage variables in the toolbox
 
 $(function() {
     var key = 1;
-    var genDragItem = function(data) {
-        return React.createElement(JSRule, {data: data, key: key++, draggable: true});
+    var genDragItem = function(data, props) {
+        return React.createElement(JSRule, {data: data, key: key++, draggable: true, 
+            editable: props.editable});
     };
 
     var pool = [
@@ -43,7 +50,9 @@ $(function() {
         }),
         JSRules.parseStructure(function() {
             ellipse(20, 20, 100, 100);
-        })
+        }),
+        {"type": "Literal", "value": 10},
+        {"type": "Literal", "value": true}
     ];
     var rules = JSRules.parseProgram("var a = true;\n" +
         "ellipse(10, 20, 30, 40);");

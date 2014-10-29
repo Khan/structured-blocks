@@ -131,11 +131,40 @@ var JSLiteral = JSRules.addRule({
         this.setState({vars: {value: val}});
     },
 
+    onBlur: function(event) {
+        this.setState({ active: false });
+    },
+
+    activate: function() {
+        this.setState({ active: true }, function() {
+            var node = this.refs.input.getDOMNode();
+            node.focus();
+            node.select();
+        });
+    },
+
     render: function() {
-        var val = this.props.node.value;
-        return <div className={"block block-inline block-" + this.getType()}>
-            <input type="text" defaultValue={this.state.vars.value}
-                onChange={this.onChange} size={val.toString().length}/>
+        var val = this.state.vars.value.toString();
+        var className = "block block-inline block-" + this.getType();
+        var activate = this.activate;
+
+        if (!this.state.active || !this.props.editable) {
+            if (!this.props.editable) {
+                activate = null;
+            }
+
+            return <div className={className} onClick={activate}>
+                <span className="value">{val}</span>
+            </div>;
+        }
+
+        return <div className={className} onClick={activate}>
+            <input type="text"
+                ref="input"
+                defaultValue={this.props.node.value}
+                size={val.toString().length}
+                onChange={this.onChange}
+                onBlur={this.onBlur}/>
         </div>;
     }
 });

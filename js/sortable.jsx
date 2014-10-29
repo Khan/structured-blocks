@@ -74,7 +74,7 @@ window.SortableArea = React.createClass({
     },
     mapComponents: function(components) {
         return components.map(function(data) {
-            return this.props.genComponent(data);
+            return this.props.genComponent(data, this.props);
         }.bind(this));
     },
     isDragging: function() {
@@ -107,7 +107,7 @@ window.SortableArea = React.createClass({
         if (!this.isDragging()) {
             var index = this.state.components.length;
             var data = SortableItem.curDragData;
-            var component = this.props.genComponent(data);
+            var component = this.props.genComponent(data, this.props);
 
             this.setState({
                 itemAdded: component,
