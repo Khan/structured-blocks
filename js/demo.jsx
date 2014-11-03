@@ -1,19 +1,57 @@
-var FromToContainer = React.createClass({
+var JSToolboxEditor = React.createClass({
+    getInitialState: function() {
+        var code = this.props.code;
+
+        if (typeof code === "string") {
+            code = JSRules.parseProgram(code);
+        }
+
+        var toolbox = this.props.toolbox || [];
+
+        toolbox = toolbox.map(function(item) {
+            if (typeof item === "object") {
+                return item;
+            }
+
+            return JSRules.parseStructure(item);
+        });
+
+        return {
+            code: code,
+            toolbox: toolbox
+        };
+    },
+
+    toScript: function() {
+        return this.refs.to.getComponents();
+    },
+
+    genComponent: function(data, props) {
+        if (!this.key) {
+            this.key = 0;
+        }
+
+        return <JSRule data={data} key={this.key++}
+            draggable={true}
+            editable={props.editable}/>;
+    },
+
     render: function() {
         return <div>
             <SortableArea
-                className="to"
-                data={this.props.to}
+                ref="editor"
+                className="editor"
+                data={this.state.code}
                 accept={true}
                 editable={true}
-                genComponent={this.props.genComponent}
+                genComponent={this.genComponent}
                 onReorder={() => true}/>
             <SortableArea
-                className="from"
-                data={this.props.from}
+                className="toolbox"
+                data={this.state.toolbox}
                 accept={false}
                 editable={false}
-                genComponent={this.props.genComponent}
+                genComponent={this.genComponent}
                 onReorder={() => true}
                 reorder={false}/>
         </div>;
@@ -35,31 +73,24 @@ var FromToContainer = React.createClass({
 // TODO: Find a way to dynamically manage variables in the toolbox
 
 $(function() {
-    var key = 1;
-    var genDragItem = function(data, props) {
-        return <JSRule data={data} key={key++} draggable={true}
-            editable={props.editable}/>;
-    };
-
-    var pool = [
-        JSRules.parseStructure(function() {
+    var toolbox = [
+        function() {
             var name = true;
-        }),
-        JSRules.parseStructure(function() {
+        },
+        function() {
             var foo = false;
-        }),
-        JSRules.parseStructure(function() {
+        },
+        function() {
             ellipse(20, 20, 100, 100);
-        }),
+        },
         {"type": "Literal", "value": 10},
         {"type": "Literal", "value": true}
     ];
-    var rules = JSRules.parseProgram("var a = true;\n" +
-        "ellipse(10, 20, 30, 40);");
+
+    var code = "var a = true;\nellipse(10, 20, 30, 40);";
 
     var rule = React.render(
-        <FromToContainer from={pool} to={rules}
-            genComponent={genDragItem}/>,
+        <JSToolboxEditor toolbox={toolbox} code={code}/>,
         $("#structured-blocks")[0]
     );
 
