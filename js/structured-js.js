@@ -1,21 +1,4 @@
-var JSRules = {
-    rules: [],
-
-    addRule: function(rule) {
-        rule = React.createClass(rule);
-        this.rules.push(rule);
-        return rule;
-    },
-
-    parseProgram: function(code) {
-        return esprima.parse(code).body;
-    },
-
-    parseStructure: function(fn) {
-        return esprima.parse("(" + fn + ")").body[0].expression.body.body[0];
-    }
-};
-
+/*
 var JSMixin = {
     getInitialState: function() {
         var match = this.props.match;
@@ -94,11 +77,7 @@ var JSMixin = {
     }
 };
 
-var JSASTMixin = {
-    toAST: function() {
-        return Structured.injectData(this.props.structure, this.getAST());
-    }
-};
+
 
 var JSRule = React.createClass({
     toAST: function() {
@@ -135,3 +114,4 @@ var JSRule = React.createClass({
         throw new Error("No rule found for: " + JSON.stringify(node));
     }
 });
+*/

@@ -1,12 +1,22 @@
-var JSToolboxEditor = React.createClass({
-    getInitialState: function() {
-        var code = this.props.code;
+var JSEditor = Backbone.View.extend({
+    initialize: function(options) {
+        var code = options.code;
 
         if (typeof code === "string") {
             code = JSRules.parseProgram(code);
         }
 
-        var toolbox = this.props.toolbox || [];
+        this.code = code;
+    },
+
+    render: function() {
+        
+    }
+});
+
+var JSToolbox = Backbone.View.extend({
+    initialize: function(options) {
+        var toolbox = options.toolbox || [];
 
         toolbox = toolbox.map(function(item) {
             if (typeof item === "object") {
@@ -16,14 +26,19 @@ var JSToolboxEditor = React.createClass({
             return JSRules.parseStructure(item);
         });
 
-        return {
-            code: code,
-            toolbox: toolbox
-        };
-    },
+        this.toolbox = toolbox;
+    }
+});
 
-    toScript: function() {
-        return this.refs.to.getComponents();
+var JSToolboxEditor = Backbone.View.extend({
+    initialize: function(options) {
+        this.editor = new JSEditor({
+            code: options.code
+        });
+
+        this.toolbox = new JSToolbox({
+            toolbox: options.toolbox
+        });
     },
 
     genComponent: function(data, props) {
@@ -37,6 +52,7 @@ var JSToolboxEditor = React.createClass({
     },
 
     render: function() {
+        this.$el
         return <div>
             <SortableArea
                 ref="editor"
@@ -89,12 +105,13 @@ $(function() {
 
     var code = "var a = true;\nellipse(10, 20, 30, 40);";
 
-    var rule = React.render(
-        <JSToolboxEditor toolbox={toolbox} code={code}/>,
-        $("#structured-blocks")[0]
-    );
+    var toolboxEditor = new JSToolboxEditor({
+        el: "#structured-blocks",
+        toolbox: toolbox,
+        code: code
+    });
 
-    //setInterval(function() {
-        //$("#output").val(rule.toScript());
-    //}, 100);
+    setInterval(function() {
+        $("#output").val(toolboxEditor.editor.toScript());
+    }, 100);
 });

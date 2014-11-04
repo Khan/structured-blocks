@@ -37,8 +37,9 @@
     .item {
         height: 20px;
         background: #FFF;
-        margin: 5px;
         padding: 5px;
+        margin: 5px;
+        width: auto;
     }
 
     .from .sortable-dragging {
@@ -55,7 +56,7 @@
     }
     */
 
-    ol {
+    ol, ul {
         margin: 0;
         padding: 0;
         height: 100%;
@@ -70,26 +71,15 @@
     <script src="external/structuredjs/external/underscore.min.js"></script>
     <script src="external/structuredjs/external/esprima.js"></script>
     <script src="external/structuredjs/structured.js"></script>
-    <script src="external/structuredjs/external/qunit.js"></script>
+    <script src="external/jquery-ui.min.js"></script>
+    <script src="external/jquery.ui.touch-punch.min.js"></script>
     <script src="external/escodegen.browser.js"></script>
     <script src="external/react-0.12.0-rc1.js"></script>
-    <script src="build/sortable.js"></script>
+    <script src="build/sortable2.js"></script>
 </head>
 <body>
-    <div id="output"></div>
-    <div id="drag-coveredup" class="dragdemo" draggable="true">drag me</div>
-    <script>
-    document.getElementById("drag-coveredup").addEventListener("dragstart", function(e) {
-        var crt = this.cloneNode(true);
-        crt.style.backgroundColor = "red";
-        crt.style.position = "absolute"; crt.style.top = "0px"; crt.style.right = "0px";
-        document.body.appendChild(crt);
-        e.dataTransfer.setDragImage(crt, 0, 0);
-        setTimeout(function() {
-            document.body.removeChild(crt);
-        }, 0)
-        
-    }, false);
-    </script>
+    <div id="output" class="to"></div>
+    <div id="output3" class="to"></div>
+    <div id="output2" class="from"></div>
 </body>
 </html>

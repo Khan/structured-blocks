@@ -1,17 +1,70 @@
-var JSProgram = JSRules.addRule({
-    mixins: [BlockMixin, JSMixin],
+var JSRules = {
+    rules: [],
 
-    statics: {
-        structure: {type: "Program"}
+    defaults: {
+        initialize: function(options) {
+            this.node = options.node;
+            this.match = options.match;
+            this.editable = options.editable;
+
+            if (this.genMatch) {
+                this.match = this.genMatch(this.match);
+            }
+        },
+
+        getAST: function() {
+            var state = this.match;
+            var ret = {_: [], vars: {}};
+
+            for (var i = 0; i < state._.length; i++) {
+                var match = state._[i];
+                ret._[i] = _.isArray(match) ?
+                    this.astComponentArray(match, "_", i) :
+                    this.astComponent(match, "_", i);
+            }
+
+            for (var name in state.vars) {
+                var match = state.vars[name];
+                ret.vars[name] = _.isArray(match) ?
+                    this.astComponentArray(match, "vars", name) :
+                    this.astComponent(match, "vars", name);
+            }
+
+            return ret;
+        }
     },
 
+    addRule: function(rule, statics) {
+        rule = Backbone.Views.extend(_.defaults(rule, this.defaults), statics);
+        this.rules.push(rule);
+        return rule;
+    },
+
+    parseProgram: function(code) {
+        return new JSProgram({
+            node: esprima.parse(code)
+        });
+    },
+
+    parseStructure: function(fn) {
+        return esprima.parse("(" + fn + ")").body[0].expression.body.body[0];
+    }
+};
+
+var JSASTMixin = {
+    toAST: function() {
+        return Structured.injectData(this.props.structure, this.getAST());
+    }
+};
+
+var JSProgram = JSRules.addRule({
     getType: function() {
         return "program";
     },
 
-    genMatch: function(node) {
+    genMatch: function() {
         return {
-            _: [this.props.node.body]
+            _: [this.node.body]
         };
     },
 
@@ -29,17 +82,11 @@ var JSProgram = JSRules.addRule({
             <BlankStatements>{children._}</BlankStatements>
         </div>;
     }
+}, {
+    structure: {type: "Program"}
 });
 
 var JSVarAssignment = JSRules.addRule({
-    mixins: [BlockMixin, JSMixin, JSASTMixin],
-
-    statics: {
-        structure: JSRules.parseStructure(function() {
-            var _ = _;
-        })
-    },
-
     getType: function(match) {
         return "statement";
     },
@@ -51,13 +98,17 @@ var JSVarAssignment = JSRules.addRule({
             {' = '}<BlankInput>{children._[1]}</BlankInput>{';'}
         </div>;
     }
+}, {
+    structure: JSRules.parseStructure(function() {
+        var _ = _;
+    })
 });
 
-var JSIdentifier = JSRules.addRule({
-    mixins: [BlockMixin, JSMixin],
+_.extend(JSVarAssignment.prototype, JSASTMixin);
 
-    statics: {
-        structure: {type: "Identifier"}
+var JSIdentifier = JSRules.addRule({
+    events: {
+        "change input": "onChange"
     },
 
     getType: function() {
@@ -67,7 +118,7 @@ var JSIdentifier = JSRules.addRule({
     genMatch: function() {
         return {
             vars: {
-                name: this.props.node.name
+                name: this.node.name
             }
         };
     },
@@ -75,38 +126,41 @@ var JSIdentifier = JSRules.addRule({
     toAST: function() {
         return {
             type: "Identifier",
-            name: this.state.vars.name
+            name: this.match.vars.name
         };
     },
 
     onChange: function(event) {
-        this.setState({vars: {name: event.target.value}});
+        this.match.vars = {name: event.target.value};
     },
 
     render: function() {
-        var name = this.state.vars.name;
+        var name = this.match.vars.name;
         return <div className="block block-inline block-variable">
             <input type="text" defaultValue={name}
-                onChange={this.onChange} size={name.toString().length}/>
+                size={name.toString().length}/>
         </div>;
     }
+}, {
+    structure: {type: "Identifier"}
 });
 
 var JSLiteral = JSRules.addRule({
-    mixins: [BlockMixin, JSMixin],
-
-    statics: {
-        structure: {type: "Literal"}
+    events: {
+        "click": "activate",
+        "change input": "onChange",
+        "blur input": "onBlur",
+        "keydown input": "onKeyDown"
     },
 
     getType: function() {
-        return typeof this.props.node.value;
+        return typeof this.node.value;
     },
 
     genMatch: function() {
         return {
             vars: {
-                value: this.props.node.value
+                value: this.node.value
             }
         };
     },
@@ -114,7 +168,7 @@ var JSLiteral = JSRules.addRule({
     toAST: function() {
         return {
             type: "Literal",
-            value: this.state.vars.value
+            value: this.match.vars.value
         };
     },
 
@@ -128,7 +182,7 @@ var JSLiteral = JSRules.addRule({
             val = parseFloat(val);
         }
 
-        this.setState({vars: {value: val}});
+        this.match.vars = {value: val};
     },
 
     onBlur: function(event) {
@@ -143,24 +197,23 @@ var JSLiteral = JSRules.addRule({
     },
 
     deactivate: function() {
-        this.setState({ active: false });
+        this.active = false;
     },
 
     activate: function() {
-        this.setState({ active: true }, function() {
-            var node = this.refs.input.getDOMNode();
-            node.focus();
-            node.select();
-        });
+        this.active = true;
+        var input = this.$el.find("input")[0];
+        input.focus();
+        input.select();
     },
 
     render: function() {
-        var val = this.state.vars.value.toString();
+        var val = this.match.vars.value.toString();
         var className = "block block-inline block-" + this.getType();
         var activate = this.activate;
 
-        if (!this.state.active || !this.props.editable) {
-            if (!this.props.editable) {
+        if (!this.active || !this.editable) {
+            if (!this.editable) {
                 activate = null;
             }
 
@@ -169,14 +222,13 @@ var JSLiteral = JSRules.addRule({
             </div>;
         }
 
-        return <div className={className} onClick={activate}>
+        return <div className={className}>
             <input type="text"
                 ref="input"
-                defaultValue={this.props.node.value}
-                size={val.toString().length}
-                onChange={this.onChange}
-                onBlur={this.onBlur}
-                onKeyDown={this.onKeyDown}/>
+                defaultValue={this.node.value}
+                size={val.toString().length}/>
         </div>;
     }
+}, {
+    structure: {type: "Literal"}
 });
