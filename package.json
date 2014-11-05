@@ -4,9 +4,7 @@
   "description": "structured-blocks =================",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "jsx --harmony -x jsx js/ build/",
-    "watch": "jsx -w --harmony -x jsx js/ build/"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -19,6 +17,5 @@
   },
   "homepage": "https://github.com/Khan/structured-blocks",
   "dependencies": {
-    "react-tools": "^0.12.0-rc1"
   }
 }
