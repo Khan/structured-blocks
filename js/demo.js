@@ -1,4 +1,6 @@
 var JSEditor = Backbone.View.extend({
+    className: "editor",
+
     initialize: function(options) {
         var code = options.code;
 
@@ -10,23 +12,33 @@ var JSEditor = Backbone.View.extend({
     },
 
     render: function() {
-        
+        this.$el.html(this.code.render().$el);
+        return this;
     }
 });
 
 var JSToolbox = Backbone.View.extend({
+    className: "toolbox",
+
     initialize: function(options) {
         var toolbox = options.toolbox || [];
 
         toolbox = toolbox.map(function(item) {
-            if (typeof item === "object") {
-                return item;
+            if (typeof item === "function") {
+                item = JSRules.parseStructure(item);
             }
 
-            return JSRules.parseStructure(item);
+            return JSRules.findRule(item);
         });
 
         this.toolbox = toolbox;
+    },
+
+    render: function() {
+        this.$el.html(this.toolbox.map(function(item) {
+            return item.render().$el;
+        }));
+        return this;
     }
 });
 
@@ -39,38 +51,15 @@ var JSToolboxEditor = Backbone.View.extend({
         this.toolbox = new JSToolbox({
             toolbox: options.toolbox
         });
-    },
 
-    genComponent: function(data, props) {
-        if (!this.key) {
-            this.key = 0;
-        }
-
-        return <JSRule data={data} key={this.key++}
-            draggable={true}
-            editable={props.editable}/>;
+        this.render();
     },
 
     render: function() {
-        this.$el
-        return <div>
-            <SortableArea
-                ref="editor"
-                className="editor"
-                data={this.state.code}
-                accept={true}
-                editable={true}
-                genComponent={this.genComponent}
-                onReorder={() => true}/>
-            <SortableArea
-                className="toolbox"
-                data={this.state.toolbox}
-                accept={false}
-                editable={false}
-                genComponent={this.genComponent}
-                onReorder={() => true}
-                reorder={false}/>
-        </div>;
+        this.$el.html([
+            this.editor.render().$el,
+            this.toolbox.render().$el
+        ]);
     }
 });
 
@@ -105,13 +94,13 @@ $(function() {
 
     var code = "var a = true;\nellipse(10, 20, 30, 40);";
 
-    var toolboxEditor = new JSToolboxEditor({
-        el: "#structured-blocks",
+    window.toolboxEditor = new JSToolboxEditor({
+        el: $("#structured-blocks"),
         toolbox: toolbox,
         code: code
     });
 
     setInterval(function() {
-        $("#output").val(toolboxEditor.editor.toScript());
+        $("#output").val(toolboxEditor.editor.code.toScript());
     }, 100);
 });

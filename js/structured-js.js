@@ -1,52 +1,103 @@
-/*
-var JSMixin = {
-    getInitialState: function() {
-        var match = this.props.match;
+var JSRules = {
+    rules: [],
 
-        if (this.genMatch) {
-            match = this.genMatch(match);
+    findRule: function(node) {
+        if (typeof node !== "object") {
+            return;
         }
 
-        match._ = match._ || [];
-        match.vars = match.vars || {};
+        for (var r = 0; r < this.rules.length; r++) {
+            var Rule = this.rules[r];
+            var match = Structured.matchNode(node, Rule.prototype.structure);
 
-        return match;
+            if (match) {
+                return new Rule({
+                    node: node,
+                    match: match,
+                    structure: Rule.prototype.structure
+                });
+            }
+        }
+
+        throw new Error("No rule found for: " + JSON.stringify(node));
     },
 
-    getChildComponents: function(state) {
-        state = state || this.state;
+    addRule: function(rule) {
+        if (typeof rule.prototype.structure === "function") {
+            rule.prototype.structure =
+                this.parseStructure(rule.prototype.structure);
+        }
+        this.rules.push(rule);
+        return rule;
+    },
+
+    parseProgram: function(code) {
+        return new JSProgram({
+            node: esprima.parse(code)
+        });
+    },
+
+    parseStructure: function(fn) {
+        return esprima.parse("(" + fn + ")").body[0].expression.body.body[0];
+    }
+};
+
+var JSRule = Backbone.View.extend({
+    initialize: function(options) {
+        this.node = options.node;
+        this.structure = options.structure;
+        this.match = _.defaults(this.genMatch(options), {
+            _: [],
+            vars: {}
+        });
+        this.children = this.getChildModels();
+    },
+
+    getChildModels: function(state) {
+        state = state || this.match;
         var ret = {_: [], vars: {}};
 
         for (var i = 0; i < state._.length; i++) {
             var match = state._[i];
             ret._[i] = _.isArray(match) ?
-                this.componentMatchArray(match, "_", i) :
-                this.componentMatch(match, "_", i);
+                this.modelMatchArray(match) :
+                this.modelMatch(match);
         }
 
         for (var name in state.vars) {
             var match = state.vars[name];
             ret.vars[name] = _.isArray(match) ?
-                this.componentMatchArray(match, "vars", name) :
-                this.componentMatch(match, "vars", name);
+                this.modelMatchArray(match) :
+                this.modelMatch(match);
         }
 
         return ret;
     },
 
-    componentMatch: function(match, ns, id) {
-        return <JSRule ref={ns + id} data={match}
-            editable={this.props.editable}/>;
+    modelMatch: function(match) {
+        return JSRules.findRule(match);
     },
 
-    componentMatchArray: function(matches, ns, id) {
-        return matches.map(function(match, i) {
-            return this.componentMatch(match, ns, id + "-" + i);
+    modelMatchArray: function(matches) {
+        return matches.map(function(match) {
+            return this.modelMatch(match);
         }.bind(this));
     },
 
+    genMatch: function() {
+        throw new Error("No genMatch method implemented.");
+    },
+
+    toAST: function() {
+        throw new Error("No toAST method implemented.");
+    },
+
+    toScript: function() {
+        return escodegen.generate(this.toAST());
+    },
+
     getAST: function() {
-        var state = this.state;
+        var state = this.match;
         var ret = {_: [], vars: {}};
 
         for (var i = 0; i < state._.length; i++) {
@@ -67,51 +118,39 @@ var JSMixin = {
     },
 
     astComponent: function(match, ns, id) {
-        return this.refs[ns + id].toAST();
+        return this.children[ns][id].toAST();
     },
 
     astComponentArray: function(matches, ns, id) {
         return matches.map(function(match, i) {
-            return this.astComponent(match, ns, id + "-" + i);
+            return this.children[ns][id][i].toAST();
         }.bind(this));
-    }
-};
-
-
-
-var JSRule = React.createClass({
-    toAST: function() {
-        return this.refs.child.toAST();
     },
 
-    toScript: function() {
-        return escodegen.generate(this.toAST());
+    renderStatements: function(statements) {
+        var $div = $("<div>").addClass("block block-statements");
+
+        $div.html(statements.map(function(statement) {
+            return statement.render().$el;
+        }));
+
+        return $div[0];
     },
 
-    render: function() {
-        var node = this.props.data;
-
-        if (typeof node !== "object") {
-            return;
-        }
-
-        for (var r = 0; r < JSRules.rules.length; r++) {
-            var rule = JSRules.rules[r];
-            var match = Structured.matchNode(node, rule.structure);
-
-            if (match) {
-                return React.createFactory(rule)({
-                    node: node,
-                    match: match,
-                    structure: rule.structure,
-                    ref: "child",
-                    draggable: true,
-                    editable: this.props.editable
-                });
-            }
-        }
-
-        throw new Error("No rule found for: " + JSON.stringify(node));
+    renderInput: function(statement) {
+        // TODO: Handle the input type
+        var $div = $("<div>").addClass("block block-input");
+        $div.html(statement.render().$el);
+        return $div[0];
     }
 });
-*/
+
+var JSASTRule = JSRule.extend({
+    genMatch: function(options) {
+        return options.match;
+    },
+
+    toAST: function() {
+        return Structured.injectData(this.structure, this.getAST());
+    }
+});

@@ -1,66 +1,7 @@
-var JSRules = {
-    rules: [],
+var JSProgram = JSRules.addRule(JSRule.extend({
+    structure: {type: "Program"},
 
-    defaults: {
-        initialize: function(options) {
-            this.node = options.node;
-            this.match = options.match;
-            this.editable = options.editable;
-
-            if (this.genMatch) {
-                this.match = this.genMatch(this.match);
-            }
-        },
-
-        getAST: function() {
-            var state = this.match;
-            var ret = {_: [], vars: {}};
-
-            for (var i = 0; i < state._.length; i++) {
-                var match = state._[i];
-                ret._[i] = _.isArray(match) ?
-                    this.astComponentArray(match, "_", i) :
-                    this.astComponent(match, "_", i);
-            }
-
-            for (var name in state.vars) {
-                var match = state.vars[name];
-                ret.vars[name] = _.isArray(match) ?
-                    this.astComponentArray(match, "vars", name) :
-                    this.astComponent(match, "vars", name);
-            }
-
-            return ret;
-        }
-    },
-
-    addRule: function(rule, statics) {
-        rule = Backbone.Views.extend(_.defaults(rule, this.defaults), statics);
-        this.rules.push(rule);
-        return rule;
-    },
-
-    parseProgram: function(code) {
-        return new JSProgram({
-            node: esprima.parse(code)
-        });
-    },
-
-    parseStructure: function(fn) {
-        return esprima.parse("(" + fn + ")").body[0].expression.body.body[0];
-    }
-};
-
-var JSASTMixin = {
-    toAST: function() {
-        return Structured.injectData(this.props.structure, this.getAST());
-    }
-};
-
-var JSProgram = JSRules.addRule({
-    getType: function() {
-        return "program";
-    },
+    className: "program",
 
     genMatch: function() {
         return {
@@ -69,50 +10,44 @@ var JSProgram = JSRules.addRule({
     },
 
     toAST: function() {
-        var ast = this.getAST();
         return {
             type: "Program",
-            body: ast._[0]
+            body: this.getAST()._[0]
         };
     },
 
     render: function() {
-        var children = this.getChildComponents();
-        return <div className="program">
-            <BlankStatements>{children._}</BlankStatements>
-        </div>;
+        this.$el.html(this.renderStatements(this.children._[0]));
+        return this;
     }
-}, {
-    structure: {type: "Program"}
-});
+}));
 
-var JSVarAssignment = JSRules.addRule({
-    getType: function(match) {
-        return "statement";
+var JSVarAssignment = JSRules.addRule(JSASTRule.extend({
+    structure: function() {
+        var _ = _;
     },
+
+    className: "block block-statement",
 
     render: function() {
-        var children = this.getChildComponents();
-        return <div className="block block-statement">
-            {'var '}{children._[0]}
-            {' = '}<BlankInput>{children._[1]}</BlankInput>{';'}
-        </div>;
+        this.$el.html([
+            "var ",
+            this.children._[0].render().$el,
+            " = ",
+            this.children._[1].render().$el,
+            ";"
+        ]);
+        return this;
     }
-}, {
-    structure: JSRules.parseStructure(function() {
-        var _ = _;
-    })
-});
+}));
 
-_.extend(JSVarAssignment.prototype, JSASTMixin);
+var JSIdentifier = JSRules.addRule(JSRule.extend({
+    structure: {type: "Identifier"},
 
-var JSIdentifier = JSRules.addRule({
+    className: "block block-inline block-variable",
+
     events: {
-        "change input": "onChange"
-    },
-
-    getType: function() {
-        return "variable";
+        "input input": "onChange"
     },
 
     genMatch: function() {
@@ -130,26 +65,32 @@ var JSIdentifier = JSRules.addRule({
         };
     },
 
-    onChange: function(event) {
-        this.match.vars = {name: event.target.value};
+    onInput: function(event) {
+        this.match.vars.name = event.target.value;
     },
 
     render: function() {
-        var name = this.match.vars.name;
-        return <div className="block block-inline block-variable">
-            <input type="text" defaultValue={name}
-                size={name.toString().length}/>
-        </div>;
-    }
-}, {
-    structure: {type: "Identifier"}
-});
+        var name = this.match.vars.name.toString();
 
-var JSLiteral = JSRules.addRule({
+        this.$el.html($("<input>")
+            .attr({
+                type: "text",
+                value: name,
+                size: name.length
+            }));
+        return this;
+    }
+}));
+
+var JSLiteral = JSRules.addRule(JSRule.extend({
+    structure: {type: "Literal"},
+
+    className: "block block-inline",
+
     events: {
         "click": "activate",
-        "change input": "onChange",
-        "blur input": "onBlur",
+        "input input": "onInput",
+        "blur input": "deactivate",
         "keydown input": "onKeyDown"
     },
 
@@ -172,7 +113,7 @@ var JSLiteral = JSRules.addRule({
         };
     },
 
-    onChange: function(event) {
+    onInput: function(event) {
         var val = event.target.value;
         var type = this.getType();
 
@@ -182,11 +123,7 @@ var JSLiteral = JSRules.addRule({
             val = parseFloat(val);
         }
 
-        this.match.vars = {value: val};
-    },
-
-    onBlur: function(event) {
-        this.deactivate();
+        this.match.vars.value = val;
     },
 
     onKeyDown: function(e) {
@@ -201,34 +138,24 @@ var JSLiteral = JSRules.addRule({
     },
 
     activate: function() {
-        this.active = true;
-        var input = this.$el.find("input")[0];
-        input.focus();
-        input.select();
+        if (this.editable) {
+            this.active = true;
+            var input = this.$el.find("input")[0];
+            input.focus();
+            input.select();
+        }
     },
 
     render: function() {
         var val = this.match.vars.value.toString();
-        var className = "block block-inline block-" + this.getType();
-        var activate = this.activate;
 
-        if (!this.active || !this.editable) {
-            if (!this.editable) {
-                activate = null;
-            }
-
-            return <div className={className} onClick={activate}>
-                <span className="value">{val}</span>
-            </div>;
-        }
-
-        return <div className={className}>
-            <input type="text"
-                ref="input"
-                defaultValue={this.node.value}
-                size={val.toString().length}/>
-        </div>;
+        this.$el.addClass("block-" + this.getType());
+        this.$el.html($("<input>")
+            .attr({
+                type: "text",
+                value: this.node.value,
+                size: val.length
+            }));
+        return this;
     }
-}, {
-    structure: {type: "Literal"}
-});
+}));

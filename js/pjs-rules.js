@@ -1,24 +1,19 @@
-var PJSEllipse = JSRules.addRule({
-    mixins: [BlockMixin, JSMixin, JSASTMixin],
-
-    statics: {
-        structure: JSRules.parseStructure(function() {
-            ellipse(_, _, _, _);
-        })
+var PJSEllipse = JSRules.addRule(JSASTRule.extend({
+    structure: function() {
+        ellipse(_, _, _, _);
     },
 
-    getType: function(match) {
-        return "statement";
-    },
+    className: "block block-statement",
 
     render: function() {
-        var children = this.getChildComponents();
-        return <div className="block block-statement">
-            {'ellipse('}
-            <BlankInput>{children._[0]}</BlankInput>{', '}
-            <BlankInput>{children._[1]}</BlankInput>{', '}
-            <BlankInput>{children._[2]}</BlankInput>{', '}
-            <BlankInput>{children._[3]}</BlankInput>{');'}
-        </div>;
+        this.$el.html([
+            "ellipse(",
+            this.children._[0].render().$el, ",",
+            this.children._[1].render().$el, ",",
+            this.children._[2].render().$el, ",",
+            this.children._[3].render().$el,
+            ");"
+        ]);
+        return this;
     }
-});
+}));
