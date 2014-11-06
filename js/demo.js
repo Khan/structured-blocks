@@ -1,68 +1,3 @@
-var JSEditor = Backbone.View.extend({
-    className: "editor",
-
-    initialize: function(options) {
-        var code = options.code;
-
-        if (typeof code === "string") {
-            code = JSRules.parseProgram(code);
-        }
-
-        this.code = code;
-    },
-
-    render: function() {
-        this.$el.html(this.code.render().$el);
-        return this;
-    }
-});
-
-var JSToolbox = Backbone.View.extend({
-    className: "toolbox",
-
-    initialize: function(options) {
-        var toolbox = options.toolbox || [];
-
-        toolbox = toolbox.map(function(item) {
-            if (typeof item === "function") {
-                item = JSRules.parseStructure(item);
-            }
-
-            return JSRules.findRule(item);
-        });
-
-        this.toolbox = toolbox;
-    },
-
-    render: function() {
-        this.$el.html(this.toolbox.map(function(item) {
-            return item.render().$el;
-        }));
-        return this;
-    }
-});
-
-var JSToolboxEditor = Backbone.View.extend({
-    initialize: function(options) {
-        this.editor = new JSEditor({
-            code: options.code
-        });
-
-        this.toolbox = new JSToolbox({
-            toolbox: options.toolbox
-        });
-
-        this.render();
-    },
-
-    render: function() {
-        this.$el.html([
-            this.editor.render().$el,
-            this.toolbox.render().$el
-        ]);
-    }
-});
-
 // TODO: Generate blocks for statements from AST automatically
 
 // TODO: Generate AST/Code
@@ -100,7 +35,7 @@ $(function() {
         code: code
     });
 
-    setInterval(function() {
-        $("#output").val(toolboxEditor.editor.code.toScript());
-    }, 100);
+    toolboxEditor.on("update", function(code) {
+        $("#output").val(code.toScript());
+    });
 });

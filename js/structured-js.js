@@ -1,3 +1,83 @@
+var JSEditor = Backbone.View.extend({
+    className: "editor",
+
+    initialize: function(options) {
+        var code = options.code;
+
+        if (typeof code === "string") {
+            code = JSRules.parseProgram(code);
+        }
+
+        this.code = code;
+
+        this.code.on({
+            "update": function() {
+                console.log("sort-update on program")
+                this.trigger("update", code);
+            }.bind(this)
+        });
+
+        setTimeout(function() {
+            this.trigger("update", code);
+        }.bind(this), 0);
+    },
+
+    render: function() {
+        this.$el.html(this.code.render().$el);
+        return this;
+    }
+});
+
+var JSToolbox = Backbone.View.extend({
+    className: "toolbox",
+
+    initialize: function(options) {
+        var toolbox = options.toolbox || [];
+
+        toolbox = toolbox.map(function(item) {
+            if (typeof item === "function") {
+                item = JSRules.parseStructure(item);
+            }
+
+            return JSRules.findRule(item);
+        });
+
+        this.toolbox = toolbox;
+    },
+
+    render: function() {
+        this.$el.html(this.toolbox.map(function(item) {
+            return item.render().$el;
+        }));
+        return this;
+    }
+});
+
+var JSToolboxEditor = Backbone.View.extend({
+    initialize: function(options) {
+        this.editor = new JSEditor({
+            code: options.code
+        });
+
+        this.editor.on("update", function(code) {
+            this.trigger("update", code);
+        }.bind(this));
+
+        this.toolbox = new JSToolbox({
+            toolbox: options.toolbox
+        });
+
+        this.render();
+    },
+
+    render: function() {
+        this.$el.html([
+            this.editor.render().$el,
+            this.toolbox.render().$el
+        ]);
+    }
+});
+
 var JSRules = {
     rules: [],
 
@@ -42,7 +122,34 @@ var JSRules = {
     }
 };
 
+var JSStatements = Backbone.Collection.extend({
+    initialize: function() {
+        this.on("sort-update", function(model, index) {
+            // Ignore cases where the model isn't in this collection
+            if (this.indexOf(model) < 0) {
+                return;
+            }
+
+            this.remove(model);
+            this.add(model, {at: index});
+        });
+    },
+
+    model: function(attrs) {
+        // Ignore objects that are already a JSRule model
+        if (attrs instanceof JSRule) {
+            return attrs;
+        }
+
+        return JSRules.findRule(attrs);
+    }
+});
+
 var JSRule = Backbone.View.extend({
+    events: {
+        "sort-update": "sortUpdate",
+    },
+
     initialize: function(options) {
         this.node = options.node;
         this.structure = options.structure;
@@ -51,6 +158,14 @@ var JSRule = Backbone.View.extend({
             vars: {}
         });
         this.children = this.getChildModels();
+    },
+
+    sortUpdate: function(e, index) {
+        if (this.collection) {
+            this.collection.trigger("sort-update", this, index);
+        }
+
+        this.trigger("update");
     },
 
     getChildModels: function(state) {
@@ -79,9 +194,7 @@ var JSRule = Backbone.View.extend({
     },
 
     modelMatchArray: function(matches) {
-        return matches.map(function(match) {
-            return this.modelMatch(match);
-        }.bind(this));
+        return new JSStatements(matches);
     },
 
     genMatch: function() {
@@ -123,16 +236,23 @@ var JSRule = Backbone.View.extend({
 
     astComponentArray: function(matches, ns, id) {
         return matches.map(function(match, i) {
-            return this.children[ns][id][i].toAST();
+            return this.children[ns][id].at(i).toAST();
         }.bind(this));
     },
 
-    renderStatements: function(statements) {
+    renderStatements: function(collection) {
         var $div = $("<div>").addClass("block block-statements");
 
-        $div.html(statements.map(function(statement) {
-            return statement.render().$el;
+        $div.html(collection.map(function(statement) {
+            return statement.render().el;
         }));
+
+        $div.sortable({
+            revert: true,
+            change: function(e, ui) {
+                ui.item.trigger("sort-update", ui.placeholder.index());
+            }
+        });
 
         return $div[0];
     },
@@ -140,7 +260,7 @@ var JSRule = Backbone.View.extend({
     renderInput: function(statement) {
         // TODO: Handle the input type
         var $div = $("<div>").addClass("block block-input");
-        $div.html(statement.render().$el);
+        $div.html(statement.render().el);
         return $div[0];
     }
 });

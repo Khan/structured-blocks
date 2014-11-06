@@ -32,9 +32,9 @@ var JSVarAssignment = JSRules.addRule(JSASTRule.extend({
     render: function() {
         this.$el.html([
             "var ",
-            this.children._[0].render().$el,
+            this.children._[0].render().el,
             " = ",
-            this.children._[1].render().$el,
+            this.children._[1].render().el,
             ";"
         ]);
         return this;
