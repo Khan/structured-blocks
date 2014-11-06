@@ -12,13 +12,13 @@ var JSEditor = Backbone.View.extend({
 
         this.code.on({
             "updated": function() {
-                this.trigger("updated", code);
+                this.trigger("updated");
             }.bind(this)
         });
+    },
 
-        setTimeout(function() {
-            this.trigger("updated", code);
-        }.bind(this), 0);
+    toScript: function() {
+        return this.code.toScript();
     },
 
     render: function() {
@@ -46,7 +46,27 @@ var JSToolbox = Backbone.View.extend({
 
     render: function() {
         this.$el.html(this.toolbox.map(function(item) {
-            return item.render().$el;
+            var $item = item.render().$el;
+
+            $item.draggable({
+                connectToSortable: ".block-statements",
+                helper: "clone",
+                revert: "invalid",
+                toSortable: function(e, ui) {
+                    console.log("toSortable")
+                    var $elems = ui.helper.siblings();
+                    var $placeholder = $elems.filter(".ui-sortable-placeholder")
+                    var curPos = $elems.index($placeholder);
+                    console.log(item, curPos, ui.helper[0])
+                    ui.helper.trigger("sort-added",
+                        [item, curPos, ui.helper[0]]);
+                },
+                fromSortable: function(e, ui) {
+                    
+                }
+            });
+
+            return $item;
         }));
         return this;
     }
@@ -67,6 +87,10 @@ var JSToolboxEditor = Backbone.View.extend({
         });
 
         this.render();
+    },
+
+    toScript: function() {
+        return this.editor.toScript();
     },
 
     render: function() {
@@ -132,6 +156,13 @@ var JSStatements = Backbone.Collection.extend({
             this.remove(model);
             this.add(model, {at: index});
         });
+
+        this.on("sort-added", function(model, index, elem) {
+            console.log("sort-added", elem)
+            var newModel = JSRules.findRule(model.node);
+            newModel.setElement(elem);
+            this.add(newModel, {at: index});
+        });
     },
 
     model: function(attrs) {
@@ -145,8 +176,13 @@ var JSStatements = Backbone.Collection.extend({
 });
 
 var JSRule = Backbone.View.extend({
-    events: {
+    baseEvents: {
         "sort-update": "sortUpdate",
+        "sort-added": "sortAdded"
+    },
+
+    events: function() {
+        return _.extend({}, this.baseEvents, this.additionalEvents);
     },
 
     initialize: function(options) {
@@ -164,11 +200,39 @@ var JSRule = Backbone.View.extend({
             this.collection.trigger("sort-update", this, index);
         }
 
-        this.updated();
+        this.triggerUpdate();
     },
 
-    updated: function() {
-        this.trigger("updated");
+    sortAdded: function(e, model, index, elem) {
+        console.log("sortAdded")
+        var collection = this.findChildCollection();
+
+        if (collection) {
+            collection.trigger("sort-added", model, index, elem);
+        }
+
+        this.triggerUpdate();
+    },
+
+    triggerUpdate: function() {
+        this.$el.trigger("updated");
+    },
+
+    findChildCollection: function() {
+        // TODO: Eventually support multiple collections per model
+        var children = this.children;
+
+        for (var i = 0, l = children._.length; i < l; i++) {
+            if (children._[i] instanceof JSStatements) {
+                return children._[i]
+            }
+        }
+
+        for (var name in children.vars) {
+            if (children.vars[name] instanceof JSStatements) {
+                return children.vars[name];
+            }
+        }
     },
 
     getChildModels: function(state) {
@@ -238,9 +302,9 @@ var JSRule = Backbone.View.extend({
     },
 
     astComponentArray: function(matches, ns, id) {
-        return matches.map(function(match, i) {
-            return this.children[ns][id].at(i).toAST();
-        }.bind(this));
+        return this.children[ns][id].map(function(model) {
+            return model.toAST();
+        });
     },
 
     renderStatements: function(collection) {
@@ -251,7 +315,7 @@ var JSRule = Backbone.View.extend({
         }));
 
         $div.sortable({
-            revert: true,
+            revert: false,
             change: function(e, ui) {
                 var curPos = ui.placeholder.parent().children(
                     ":not(.ui-sortable-helper)")

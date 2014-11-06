@@ -1,7 +1,15 @@
 var JSProgram = JSRules.addRule(JSRule.extend({
     structure: {type: "Program"},
 
+    additionalEvents: {
+        "updated": "updated"
+    },
+
     className: "program",
+
+    updated: function() {
+        this.trigger("updated", this.getAST());
+    },
 
     genMatch: function() {
         return {
@@ -46,7 +54,7 @@ var JSIdentifier = JSRules.addRule(JSRule.extend({
 
     className: "block block-inline block-variable",
 
-    events: {
+    additionalEvents: {
         "input input": "onChange"
     },
 
@@ -87,7 +95,7 @@ var JSLiteral = JSRules.addRule(JSRule.extend({
 
     className: "block block-inline",
 
-    events: {
+    additionalEvents: {
         "click": "activate",
         "input input": "onInput",
         "blur input": "deactivate",
@@ -124,6 +132,10 @@ var JSLiteral = JSRules.addRule(JSRule.extend({
         }
 
         this.match.vars.value = val;
+
+        console.log("onInput", val)
+
+        this.triggerUpdate();
     },
 
     onKeyDown: function(e) {

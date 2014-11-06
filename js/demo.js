@@ -15,16 +15,11 @@
 $(function() {
     var toolbox = [
         function() {
-            var name = true;
-        },
-        function() {
             var foo = false;
         },
         function() {
             ellipse(20, 20, 100, 100);
-        },
-        {"type": "Literal", "value": 10},
-        {"type": "Literal", "value": true}
+        }
     ];
 
     var code = "var a = true;\nellipse(10, 20, 30, 40);";
@@ -35,7 +30,9 @@ $(function() {
         code: code
     });
 
-    toolboxEditor.on("updated", function(code) {
-        $("#output").val(code.toScript());
+    toolboxEditor.on("updated", function() {
+        $("#output").val(this.toScript());
     });
+
+    $("#output").val(toolboxEditor.toScript());
 });
