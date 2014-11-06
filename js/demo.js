@@ -35,7 +35,7 @@ $(function() {
         code: code
     });
 
-    toolboxEditor.on("update", function(code) {
+    toolboxEditor.on("updated", function(code) {
         $("#output").val(code.toScript());
     });
 });

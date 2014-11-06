@@ -11,14 +11,13 @@ var JSEditor = Backbone.View.extend({
         this.code = code;
 
         this.code.on({
-            "update": function() {
-                console.log("sort-update on program")
-                this.trigger("update", code);
+            "updated": function() {
+                this.trigger("updated", code);
             }.bind(this)
         });
 
         setTimeout(function() {
-            this.trigger("update", code);
+            this.trigger("updated", code);
         }.bind(this), 0);
     },
 
@@ -59,8 +58,8 @@ var JSToolboxEditor = Backbone.View.extend({
             code: options.code
         });
 
-        this.editor.on("update", function(code) {
-            this.trigger("update", code);
+        this.editor.on("updated", function(code) {
+            this.trigger("updated", code);
         }.bind(this));
 
         this.toolbox = new JSToolbox({
@@ -165,7 +164,11 @@ var JSRule = Backbone.View.extend({
             this.collection.trigger("sort-update", this, index);
         }
 
-        this.trigger("update");
+        this.updated();
+    },
+
+    updated: function() {
+        this.trigger("updated");
     },
 
     getChildModels: function(state) {
@@ -250,7 +253,10 @@ var JSRule = Backbone.View.extend({
         $div.sortable({
             revert: true,
             change: function(e, ui) {
-                ui.item.trigger("sort-update", ui.placeholder.index());
+                var curPos = ui.placeholder.parent().children(
+                    ":not(.ui-sortable-helper)")
+                    .index(ui.placeholder);
+                ui.item.trigger("sort-update", curPos);
             }
         });
 
