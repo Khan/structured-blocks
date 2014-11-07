@@ -1,9 +1,11 @@
 var JSEditor = Backbone.View.extend({
-    className: "editor",
+    className: "block-editor",
 
     initialize: function(options) {
-        var code = options.code;
+        this.setCode(options.code);
+    },
 
+    setCode: function(code) {
         if (typeof code === "string") {
             code = JSRules.parseProgram(code);
         }
@@ -28,7 +30,7 @@ var JSEditor = Backbone.View.extend({
 });
 
 var JSToolbox = Backbone.View.extend({
-    className: "toolbox",
+    className: "block-toolbox",
 
     initialize: function(options) {
         var toolbox = options.toolbox || [];
@@ -48,18 +50,14 @@ var JSToolbox = Backbone.View.extend({
         this.$el.html(this.toolbox.map(function(item) {
             var $item = item.render().$el;
 
+            $item.data("drag-data", item.toAST());
+
             $item.draggable({
                 connectToSortable: ".block-statements",
-                helper: "clone",
-                revert: "invalid",
-                toSortable: function(e, ui) {
-                    var $elems = ui.helper.siblings();
-                    var $placeholder =
-                        $elems.filter(".ui-sortable-placeholder");
-                    var curPos = $elems.index($placeholder);
-                    ui.helper.trigger("sort-added",
-                        [item, curPos, ui.helper[0]]);
-                }
+                helper: function() {
+                    return $item.clone(true);
+                },
+                revert: "invalid"
             });
 
             return $item;
@@ -85,12 +83,18 @@ var JSToolboxEditor = Backbone.View.extend({
         this.render();
     },
 
+    setCode: function(code) {
+        this.editor.setCode(code);
+        this.editor.render();
+    },
+
     toScript: function() {
         return this.editor.toScript();
     },
 
     render: function() {
-        this.$el.html([
+        this.$el.children().detach();
+        this.$el.append([
             this.editor.render().$el,
             this.toolbox.render().$el
         ]);
@@ -100,7 +104,7 @@ var JSToolboxEditor = Backbone.View.extend({
 var JSRules = {
     rules: [],
 
-    findRule: function(node) {
+    findRule: function(node, parent) {
         if (typeof node !== "object") {
             return;
         }
@@ -112,7 +116,8 @@ var JSRules = {
             if (match) {
                 return new Rule({
                     node: node,
-                    match: match
+                    match: match,
+                    parent: parent
                 });
             }
         }
@@ -157,13 +162,17 @@ var JSRules = {
 };
 
 var JSStatements = Backbone.Collection.extend({
+    initialize: function(options) {
+        this.parent = options.parent;
+    },
+
     model: function(attrs) {
         // Ignore objects that are already a JSRule model
         if (attrs instanceof JSRule) {
             return attrs;
         }
 
-        return JSRules.findRule(attrs);
+        return JSRules.findRule(attrs, this.parent);
     }
 });
 
@@ -188,6 +197,7 @@ var JSRule = Backbone.View.extend({
             vars: {}
         });
         this.children = this.getChildModels();
+        this.parent = options.parent;
     },
 
     inside: function() {
@@ -231,11 +241,11 @@ var JSRule = Backbone.View.extend({
         this.triggerUpdate();
     },
 
-    sortAdded: function(e, model, index, elem) {
+    sortAdded: function(e, data, index, elem) {
         var collection = this.findChildCollection();
 
         if (collection) {
-            var newModel = JSRules.findRule(model.toAST());
+            var newModel = JSRules.findRule(data, this);
             newModel.setElement(elem);
             collection.add(newModel, {at: index});
         }
@@ -255,7 +265,11 @@ var JSRule = Backbone.View.extend({
     },
 
     triggerUpdate: function() {
-        this.$el.trigger("updated");
+        this.trigger("updated");
+
+        if (this.parent) {
+            this.parent.triggerUpdate();
+        }
     },
 
     findChildCollection: function() {
@@ -297,11 +311,13 @@ var JSRule = Backbone.View.extend({
     },
 
     modelMatch: function(match) {
-        return JSRules.findRule(match);
+        return JSRules.findRule(match, this);
     },
 
     modelMatchArray: function(matches) {
-        return new JSStatements(matches);
+        return new JSStatements(matches, {
+            parent: this
+        });
     },
 
     genMatch: function() {
@@ -356,7 +372,10 @@ var JSRule = Backbone.View.extend({
 
         var getIndex = function(ui) {
             if (ui.helper) {
-                return ui.helper.siblings().index(ui.placeholder);
+                return ui.placeholder.parent().children()
+                    .not(".ui-sortable-helper")
+                    .not(ui.item)
+                    .index(ui.placeholder);
             } else {
                 return ui.item.index();
             }
@@ -377,6 +396,12 @@ var JSRule = Backbone.View.extend({
                 outside = false;
             },
             over: function(e, ui) {
+                if (ui.helper.hasClass("ui-draggable")) {
+                    var data = ui.helper.data("drag-data");
+                    ui.placeholder.trigger("sort-added",
+                        [data, getIndex(ui), ui.item]);
+                }
+
                 outside = false;
                 ui.item.triggerHandler("inside");
                 ui.placeholder.removeClass("outside");
@@ -404,7 +429,7 @@ var JSRule = Backbone.View.extend({
 
                 // Remove the model when the external draggable is moved
                 // outside of the sortable (sortable already removes the elem)
-                if (ui.helper && ui.item.hasClass("ui-draggable-dragging")) {
+                if (ui.helper && ui.helper.hasClass("ui-draggable")) {
                     ui.item.trigger("sort-removed", getIndex(ui));
                 }
 
