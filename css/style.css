@@ -1,25 +1,25 @@
-.program > .block-statements {
+.program > .block.block-statements {
     height: 100%;
 }
 
-.block-statements .ui-sortable-placeholder {
+.block.block-statements .ui-sortable-placeholder {
     visibility: visible !important;
     background: rgba(0, 0, 0, 0.2);
     box-shadow: #999 0px 0px 5px;
 }
 
-.ui-draggable-dragging {
+.block.ui-draggable-dragging {
     box-shadow: #333 0px 0px 10px;
 }
 
-.block-inline input {
+.block.block-inline input {
     -webkit-appearance: none;
     background: #FFF;
     border: 1px solid #CCC;
     padding: 5px;
 }
 
-.block-statement {
+.block.block-statement {
     float: left;
     clear: left;
     border: 1px solid #AAA;
@@ -29,13 +29,6 @@
     background: #EEE;
 }
 
-.block-inline {
+.block.block-inline {
     display: inline-block;
-}
-
-.toolbox, .editor {
-    width: 400px;
-    height: 400px;
-    float: left;
-    border: 1px solid #000;
 }

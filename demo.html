@@ -3,6 +3,17 @@
     <title>Block Input Demo</title>
     <link rel="stylesheet" href="external/github.css"/>
     <link rel="stylesheet" href="css/style.css"/>
+    <style>
+    .toolbox, .editor {
+        width: 400px;
+        height: 400px;
+        float: left;
+        border: 1px solid #000;
+    }
+    #output {
+        height: 400px;
+    }
+    </style>
     <script src="external/structuredjs/external/jquery.min.js"></script>
     <script src="external/structuredjs/external/underscore.min.js"></script>
     <script src="external/backbone-min.js"></script>
@@ -18,6 +29,6 @@
 </head>
 <body>
     <div id="structured-blocks"></div>
-    <textarea id="output" style="height: 400px;"></textarea>
+    <textarea id="output"></textarea>
 </body>
 </html>
