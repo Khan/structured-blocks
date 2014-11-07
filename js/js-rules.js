@@ -62,6 +62,7 @@ JSRules.addRule(JSRule.extend({
 
     onInput: function(event) {
         this.match.vars.name = event.target.value;
+        event.target.size = event.target.value.length || 1;
 
         this.triggerUpdate();
     },
@@ -121,6 +122,7 @@ JSRules.addRule(JSRule.extend({
         }
 
         this.match.vars.value = val;
+        event.target.size = event.target.value.length || 1;
 
         this.triggerUpdate();
     },
