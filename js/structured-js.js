@@ -54,7 +54,8 @@ var JSToolbox = Backbone.View.extend({
                 revert: "invalid",
                 toSortable: function(e, ui) {
                     var $elems = ui.helper.siblings();
-                    var $placeholder = $elems.filter(".ui-sortable-placeholder")
+                    var $placeholder =
+                        $elems.filter(".ui-sortable-placeholder");
                     var curPos = $elems.index($placeholder);
                     ui.helper.trigger("sort-added",
                         [item, curPos, ui.helper[0]]);
