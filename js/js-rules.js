@@ -30,13 +30,13 @@ var JSProgram = JSRules.addRule(JSRule.extend({
     }
 }));
 
-var JSVarAssignment = JSRules.addRule(JSASTRule.extend({
+JSRules.addRule(JSASTRule.extend({
     structure: function() {
         var _ = _;
     }
 }));
 
-var JSIdentifier = JSRules.addRule(JSRule.extend({
+JSRules.addRule(JSRule.extend({
     structure: {type: "Identifier"},
 
     className: "block block-inline block-variable",
@@ -79,7 +79,7 @@ var JSIdentifier = JSRules.addRule(JSRule.extend({
     }
 }));
 
-var JSLiteral = JSRules.addRule(JSRule.extend({
+JSRules.addRule(JSRule.extend({
     structure: {type: "Literal"},
 
     className: "block block-inline",

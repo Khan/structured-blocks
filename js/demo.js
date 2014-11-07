@@ -15,14 +15,17 @@
 $(function() {
     var toolbox = [
         function() {
-            var foo = false;
+            fill(255, 0, 0);
+        },
+        function() {
+            rect(10, 10, 50, 50);
         },
         function() {
             ellipse(20, 20, 100, 100);
         }
     ];
 
-    var code = "var a = true;\nellipse(10, 20, 30, 40);";
+    var code = "fill(255, 0, 0);\nellipse(10, 20, 30, 40);";
 
     window.toolboxEditor = new JSToolboxEditor({
         el: $("#structured-blocks"),
