@@ -220,7 +220,7 @@ var JSRule = Backbone.View.extend({
         var collection = this.findChildCollection();
 
         if (collection) {
-            var newModel = JSRules.findRule(model.node);
+            var newModel = JSRules.findRule(model.toAST());
             newModel.setElement(elem);
             collection.add(newModel, {at: index});
         }

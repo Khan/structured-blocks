@@ -55,7 +55,7 @@ var JSIdentifier = JSRules.addRule(JSRule.extend({
     className: "block block-inline block-variable",
 
     additionalEvents: {
-        "input input": "onChange"
+        "input input": "onInput"
     },
 
     genMatch: function() {
@@ -75,6 +75,8 @@ var JSIdentifier = JSRules.addRule(JSRule.extend({
 
     onInput: function(event) {
         this.match.vars.name = event.target.value;
+
+        this.triggerUpdate();
     },
 
     render: function() {
@@ -163,7 +165,7 @@ var JSLiteral = JSRules.addRule(JSRule.extend({
         this.$el.html($("<input>")
             .attr({
                 type: "text",
-                value: this.node.value,
+                value: val,
                 size: val.length
             }));
         return this;
