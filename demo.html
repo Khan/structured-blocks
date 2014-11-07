@@ -1,85 +1,8 @@
 <html>
 <head>
+    <title>Block Input Demo</title>
     <link rel="stylesheet" href="external/github.css"/>
-    <style>
-    .program > .block-statements {
-        height: 100%;
-    }
-
-    .block-statements .ui-sortable-placeholder {
-        visibility: visible !important;
-        background: rgba(0, 0, 0, 0.2);
-        box-shadow: #999 0px 0px 5px;
-    }
-
-    .ui-draggable-dragging {
-        box-shadow: #333 0px 0px 10px;
-    }
-
-    .block-inline input {
-        -webkit-appearance: none;
-        background: #FFF;
-        border: 1px solid #CCC;
-        padding: 5px;
-    }
-
-    .block {
-        background: #FFF;
-    }
-
-    .block-statement {
-        float: left;
-        clear: left;
-        border: 1px solid #AAA;
-        padding: 3px;
-        margin: 3px;
-        border-radius: 3px;
-        background: #EEE;
-    }
-
-    .block-inline {
-        display: inline-block;
-    }
-
-    .block-blank {
-        background: #FFF;
-        display: inline-block;
-    }
-
-    .toolbox, .editor {
-        width: 400px;
-        height: 400px;
-        float: left;
-        border: 1px solid #000;
-    }
-
-    .toolbox {
-        background: red;
-    }
-
-    .editor {
-        background: green;
-    }
-
-    .toolbox .sortable-dragging {
-        opacity: 0.7;
-    }
-
-    .editor .sortable-dragging > * {
-        outline: 1px solid red;
-    }
-
-    ol {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-    }
-
-    li {
-        display: block;
-    }
-    </style>
-
+    <link rel="stylesheet" href="css/style.css"/>
     <script src="external/structuredjs/external/jquery.min.js"></script>
     <script src="external/structuredjs/external/underscore.min.js"></script>
     <script src="external/backbone-min.js"></script>
@@ -92,10 +15,9 @@
     <script src="js/js-rules.js"></script>
     <script src="js/pjs-rules.js"></script>
     <script src="js/demo.js"></script>
-    <!--<script src="tests.js"></script>-->
 </head>
 <body>
     <div id="structured-blocks"></div>
-    <textarea id="output"></textarea>
+    <textarea id="output" style="height: 400px;"></textarea>
 </body>
 </html>

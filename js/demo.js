@@ -1,17 +1,3 @@
-// TODO: Generate blocks for statements from AST automatically
-
-// TODO: Generate AST/Code
-
-// TODO: Sync position of element immediately on initial drag in
-
-// TODO: Destroy To drag on leave drop
-// TODO: Find a way to drag sub-components
-//  - Be able to move a sub-component into another blank
-//    - Limit it by the "type" and the accepted type
-//  - Be able to "destroy" an existing sub-component - some how?
-
-// TODO: Find a way to dynamically manage variables in the toolbox
-
 $(function() {
     var toolbox = [
         function() {
