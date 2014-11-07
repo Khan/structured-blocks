@@ -53,16 +53,11 @@ var JSToolbox = Backbone.View.extend({
                 helper: "clone",
                 revert: "invalid",
                 toSortable: function(e, ui) {
-                    console.log("toSortable")
                     var $elems = ui.helper.siblings();
                     var $placeholder = $elems.filter(".ui-sortable-placeholder")
                     var curPos = $elems.index($placeholder);
-                    console.log(item, curPos, ui.helper[0])
                     ui.helper.trigger("sort-added",
                         [item, curPos, ui.helper[0]]);
-                },
-                fromSortable: function(e, ui) {
-                    
                 }
             });
 
@@ -146,25 +141,6 @@ var JSRules = {
 };
 
 var JSStatements = Backbone.Collection.extend({
-    initialize: function() {
-        this.on("sort-update", function(model, index) {
-            // Ignore cases where the model isn't in this collection
-            if (this.indexOf(model) < 0) {
-                return;
-            }
-
-            this.remove(model);
-            this.add(model, {at: index});
-        });
-
-        this.on("sort-added", function(model, index, elem) {
-            console.log("sort-added", elem)
-            var newModel = JSRules.findRule(model.node);
-            newModel.setElement(elem);
-            this.add(newModel, {at: index});
-        });
-    },
-
     model: function(attrs) {
         // Ignore objects that are already a JSRule model
         if (attrs instanceof JSRule) {
@@ -178,7 +154,11 @@ var JSStatements = Backbone.Collection.extend({
 var JSRule = Backbone.View.extend({
     baseEvents: {
         "sort-update": "sortUpdate",
-        "sort-added": "sortAdded"
+        "sort-added": "sortAdded",
+        "sort-removed": "sortRemoved",
+        "inside": "inside",
+        "outside": "outside",
+        "drop": "drop"
     },
 
     events: function() {
@@ -195,20 +175,60 @@ var JSRule = Backbone.View.extend({
         this.children = this.getChildModels();
     },
 
+    inside: function() {
+        this.$el.removeClass("outside");
+    },
+
+    outside: function() {
+        this.$el.addClass("outside");
+    },
+
+    drop: function() {
+        // Remove the draggable related classes/styling
+        this.$el.removeClass("ui-draggable ui-draggable-handle")
+            .css({width: "", height: ""});
+
+        // Re-render after dropping the element, to avoid any dummy
+        // element shenanigans from jQuery UI
+        this.render();
+
+        this.$el.parent().sortable("refresh");
+    },
+
     sortUpdate: function(e, index) {
+        var collection = this.collection;
+
         if (this.collection) {
-            this.collection.trigger("sort-update", this, index);
+            // Ignore cases where the model isn't in this collection
+            if (collection.indexOf(this) < 0) {
+                return;
+            }
+
+            collection.remove(this);
+            collection.add(this, {at: index});
         }
 
         this.triggerUpdate();
     },
 
     sortAdded: function(e, model, index, elem) {
-        console.log("sortAdded")
         var collection = this.findChildCollection();
 
         if (collection) {
-            collection.trigger("sort-added", model, index, elem);
+            var newModel = JSRules.findRule(model.node);
+            newModel.setElement(elem);
+            collection.add(newModel, {at: index});
+        }
+
+        this.triggerUpdate();
+    },
+
+    sortRemoved: function(e, index) {
+        var collection = this.findChildCollection();
+
+        if (collection) {
+            var model = collection.at(index);
+            collection.remove(model);
         }
 
         this.triggerUpdate();
@@ -314,13 +334,62 @@ var JSRule = Backbone.View.extend({
             return statement.render().el;
         }));
 
+        var getIndex = function(ui) {
+            if (ui.helper) {
+                return ui.helper.siblings().index(ui.placeholder);
+            } else {
+                return ui.item.index();
+            }
+        };
+
+        var outside = false;
+        var stopping = false;
+
         $div.sortable({
             revert: false,
             change: function(e, ui) {
-                var curPos = ui.placeholder.parent().children(
-                    ":not(.ui-sortable-helper)")
-                    .index(ui.placeholder);
-                ui.item.trigger("sort-update", curPos);
+                ui.item.trigger("sort-update", getIndex(ui));
+            },
+            receive: function(e, ui) {
+                if (outside) {
+                    ui.item.triggerHandler("inside");
+                }
+                outside = false;
+            },
+            over: function(e, ui) {
+                outside = false;
+                ui.item.triggerHandler("inside");
+                ui.placeholder.removeClass("outside");
+            },
+            beforeStop: function(e, ui) {
+                stopping = true;
+
+                // Remove item when dropped outside the sortable
+                if (outside) {
+                    ui.item.trigger("sort-removed", getIndex(ui));
+                    ui.item.remove();
+                }
+            },
+            stop: function(e, ui) {
+                stopping = false;
+                ui.item.triggerHandler("drop");
+            },
+            out: function(e, ui) {
+                // An extra 'out' event fires while stopping, we ignore it
+                if (stopping) {
+                    return;
+                }
+
+                outside = true;
+
+                // Remove the model when the external draggable is moved
+                // outside of the sortable (sortable already removes the elem)
+                if (ui.helper && ui.item.hasClass("ui-draggable-dragging")) {
+                    ui.item.trigger("sort-removed", getIndex(ui));
+                }
+
+                ui.placeholder.addClass("outside");
+                ui.item.triggerHandler("outside");
             }
         });
 

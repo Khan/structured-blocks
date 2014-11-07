@@ -133,8 +133,6 @@ var JSLiteral = JSRules.addRule(JSRule.extend({
 
         this.match.vars.value = val;
 
-        console.log("onInput", val)
-
         this.triggerUpdate();
     },
 
