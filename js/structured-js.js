@@ -162,17 +162,13 @@ var JSRules = {
 };
 
 var JSStatements = Backbone.Collection.extend({
-    initialize: function(options) {
-        this.parent = options.parent;
-    },
-
-    model: function(attrs) {
+    model: function(attrs, options) {
         // Ignore objects that are already a JSRule model
         if (attrs instanceof JSRule) {
             return attrs;
         }
 
-        return JSRules.findRule(attrs, this.parent);
+        return JSRules.findRule(attrs, options.parent);
     }
 });
 
