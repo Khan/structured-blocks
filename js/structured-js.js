@@ -111,8 +111,7 @@ var JSRules = {
             if (match) {
                 return new Rule({
                     node: node,
-                    match: match,
-                    structure: Rule.prototype.structure
+                    match: match
                 });
             }
         }
@@ -121,12 +120,28 @@ var JSRules = {
     },
 
     addRule: function(rule) {
+        rule.prototype.tokens = this.tokenize(rule.prototype.structure);
+
         if (typeof rule.prototype.structure === "function") {
             rule.prototype.structure =
                 this.parseStructure(rule.prototype.structure);
         }
+
         this.rules.push(rule);
         return rule;
+    },
+
+    tokenize: function(fn) {
+        if (typeof fn === "object") {
+            return [];
+        }
+
+        if (typeof fn === "function") {
+            fn = fn.toString().replace(/function.*?{\s*/, "")
+                .replace(/\s*}$/, "");
+        }
+
+        return esprima.tokenize(fn);
     },
 
     parseProgram: function(code) {
@@ -167,7 +182,6 @@ var JSRule = Backbone.View.extend({
 
     initialize: function(options) {
         this.node = options.node;
-        this.structure = options.structure;
         this.match = _.defaults(this.genMatch(options), {
             _: [],
             vars: {}
@@ -410,11 +424,64 @@ var JSRule = Backbone.View.extend({
 });
 
 var JSASTRule = JSRule.extend({
+    className: "block block-statement",
+
     genMatch: function(options) {
         return options.match;
     },
 
     toAST: function() {
         return Structured.injectData(this.structure, this.getAST());
+    },
+
+    render: function() {
+        var children = this.children;
+        var tokens = this.tokens;
+        var _pos = 0;
+
+        var buildTag = function(type, token) {
+            return "<span class='" + type + "'>" + token.value + "</span>";
+        };
+
+        tokens = tokens.map(function(token) {
+            if (token.type === "Identifier") {
+                if (token.value === "_") {
+                    return children._[_pos++].render().el;
+                } else {
+                    return buildTag("entity name function call", token);
+                }
+            } else if (token.type === "Punctuator") {
+                switch(token.value) {
+                    case ".":
+                        return buildTag("keyword dot", token);
+                    case "=":
+                    case "+":
+                    case "!":
+                    case "-":
+                    case "|":
+                    case "*":
+                    case "/":
+                        token.value = " " + token.value + " ";
+                        return buildTag("keyword operator", token);
+                    case ",":
+                        return ", ";
+                }
+            } else if (token.type === "Keyword") {
+                token.value += " ";
+                return buildTag("keyword", token);
+
+            } else if (token.type === "Boolean") {
+                return buildTag("constant language", token);
+
+            } else if (token.type === "Numeric") {
+                return buildTag("constant numeric", token);
+            }
+
+            return token.value;
+        });
+
+        this.$el.html(tokens);
+
+        return this;
     }
 });

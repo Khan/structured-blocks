@@ -33,19 +33,6 @@ var JSProgram = JSRules.addRule(JSRule.extend({
 var JSVarAssignment = JSRules.addRule(JSASTRule.extend({
     structure: function() {
         var _ = _;
-    },
-
-    className: "block block-statement",
-
-    render: function() {
-        this.$el.html([
-            "var ",
-            this.children._[0].render().el,
-            " = ",
-            this.children._[1].render().el,
-            ";"
-        ]);
-        return this;
     }
 }));
 
@@ -159,14 +146,16 @@ var JSLiteral = JSRules.addRule(JSRule.extend({
     },
 
     render: function() {
+        var type = this.getType();
         var val = this.match.vars.value.toString();
 
-        this.$el.addClass("block-" + this.getType());
+        this.$el.addClass("block-" + type);
         this.$el.html($("<input>")
             .attr({
                 type: "text",
                 value: val,
-                size: val.length
+                size: val.length,
+                "class": "constant numeric"
             }));
         return this;
     }
