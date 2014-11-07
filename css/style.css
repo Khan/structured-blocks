@@ -27,6 +27,7 @@
     margin: 3px;
     border-radius: 3px;
     background: #EEE;
+    white-space: pre;
 }
 
 .block.block-inline {
