@@ -514,7 +514,7 @@ var JSASTRule = JSRule.extend({
             return token.value;
         });
 
-        this.$el.html(tokens);
+        this.$el.html($("<div>").append(tokens));
 
         return this;
     }
