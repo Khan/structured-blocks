@@ -14,6 +14,7 @@
     background: #FFF;
     border: 1px solid #CCC;
     padding: 5px;
+    font-size: 13px;
 }
 
 .block.block-statement {
@@ -43,4 +44,22 @@
     font-size: 16px;
     padding: 5px 3px;
     font-family: Helvetica;
+}
+
+.block-toolbox > .ui-draggable {
+    font-size: 10px;
+}
+
+.block-toolbox > .ui-draggable input {
+    font-size: 10px;
+    padding: 2px;
+}
+
+.block-toolbox > .ui-draggable.ui-draggable-dragging {
+    font-size: 13px;
+}
+
+.block-toolbox > .ui-draggable.ui-draggable-dragging input {
+    font-size: 13px;
+    padding: 5px;
 }
