@@ -33,35 +33,47 @@ var JSToolbox = Backbone.View.extend({
     className: "block-toolbox",
 
     initialize: function(options) {
-        var toolbox = options.toolbox || [];
+        var toolbox = options.toolbox || {};
 
-        toolbox = toolbox.map(function(item) {
-            if (typeof item === "function") {
-                item = JSRules.parseStructure(item);
-            }
+        _.keys(toolbox).forEach(function(category) {
+            toolbox[category] = toolbox[category].map(function(item) {
+                if (typeof item === "function") {
+                    item = JSRules.parseStructure(item);
+                }
 
-            return JSRules.findRule(item);
+                return JSRules.findRule(item);
+            });
         });
 
         this.toolbox = toolbox;
     },
 
     render: function() {
-        this.$el.html(this.toolbox.map(function(item) {
-            var $item = item.render().$el;
+        var html = [];
+        var toolbox = this.toolbox;
 
-            $item.data("drag-data", item.toAST());
+        _.keys(toolbox).forEach(function(category) {
+            html.push("<h3>" + category + "</h3>");
 
-            $item.draggable({
-                connectToSortable: ".block-statements",
-                helper: function() {
-                    return $item.clone(true);
-                },
-                revert: "invalid"
+            toolbox[category].forEach(function(item) {
+                var $item = item.render().$el;
+
+                $item.data("drag-data", item.toAST());
+
+                $item.draggable({
+                    connectToSortable: ".block-statements",
+                    helper: function() {
+                        return $item.clone(true);
+                    },
+                    revert: "invalid"
+                });
+
+                html.push($item);
             });
+        });
 
-            return $item;
-        }));
+        this.$el.html(html);
+
         return this;
     }
 });
