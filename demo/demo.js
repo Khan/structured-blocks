@@ -20,7 +20,8 @@ $(function() {
     window.toolboxEditor = new JSToolboxEditor({
         el: $("#structured-blocks"),
         toolbox: toolbox,
-        code: code
+        code: code,
+        imagesDir: "../images/"
     });
 
     toolboxEditor.on("updated", function() {

@@ -61,6 +61,14 @@
     display: none;
 }
 
+.block-toolbox > .ui-draggable > div > img.toolbox-image {
+    display: inline-block;
+    height: 20px;
+    vertical-align: middle;
+    border: 1px solid #CCC;
+    margin-left: 5px;
+}
+
 .block-toolbox > .ui-draggable input {
     font-size: 13px;
     padding: 2px;
@@ -72,6 +80,10 @@
 
 .block-toolbox > .ui-draggable.ui-draggable-dragging > div > :not(.function) {
     display: inline-block;
+}
+
+.block-toolbox > .ui-draggable.ui-draggable-dragging > div > img.toolbox-image {
+    display: none;
 }
 
 .block-toolbox > .ui-draggable.ui-draggable-dragging input {

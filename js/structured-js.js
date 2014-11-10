@@ -41,7 +41,10 @@ var JSToolbox = Backbone.View.extend({
                     item = JSRules.parseStructure(item);
                 }
 
-                return JSRules.findRule(item);
+                var rule = JSRules.findRule(item);
+                rule.imagesDir = options.imagesDir;
+
+                return rule;
             });
         });
 
@@ -80,6 +83,8 @@ var JSToolbox = Backbone.View.extend({
 
 var JSToolboxEditor = Backbone.View.extend({
     initialize: function(options) {
+        this.imagesDir = options.imagesDir;
+
         this.editor = new JSEditor({
             code: options.code
         });
@@ -89,7 +94,8 @@ var JSToolboxEditor = Backbone.View.extend({
         }.bind(this));
 
         this.toolbox = new JSToolbox({
-            toolbox: options.toolbox
+            toolbox: options.toolbox,
+            imagesDir: options.imagesDir
         });
 
         this.render();
@@ -521,6 +527,11 @@ var JSASTRule = JSRule.extend({
 
             return text;
         });
+
+        if (this.image && this.imagesDir) {
+            tokens.push("<img src='" + this.imagesDir + "toolbox/" +
+                this.image  + "' class='toolbox-image'/>")
+        }
 
         this.$el.html($("<div>").append(tokens));
 

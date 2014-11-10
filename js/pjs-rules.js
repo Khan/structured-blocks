@@ -1,48 +1,56 @@
 // Shapes
 
 JSRules.addRule(JSASTRule.extend({
+    image: "rect.png",
     structure: function() {
         rect($x, $y, $width, $height);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
+    image: "line.png",
     structure: function() {
         line(_, _, _, _);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
+    image: "bezier.png",
     structure: function() {
         bezier(_, _, _, _, _, _, _, _);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
+    image: "ellipse.png",
     structure: function() {
         ellipse(_, _, _, _);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
+    image: "point.png",
     structure: function() {
         point(_, _);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
+    image: "quad.png",
     structure: function() {
         quad(_, _, _, _, _, _, _, _);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
+    image: "triangle.png",
     structure: function() {
         triangle(_, _, _, _, _, _);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
+    image: "arc.png",
     structure: function() {
         arc(_, _, _, _, _, _);
     }
@@ -50,6 +58,7 @@ JSRules.addRule(JSASTRule.extend({
 
 // TODO: Handle additional height/width args
 JSRules.addRule(JSASTRule.extend({
+    image: "image.png",
     structure: function() {
         image(_, _, _);
     }
