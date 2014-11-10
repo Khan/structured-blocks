@@ -52,16 +52,24 @@
 }
 
 .block-toolbox > .ui-draggable {
-    font-size: 10px;
+    font-size: 13px;
+}
+
+.block-toolbox > .ui-draggable > div > :not(.function) {
+    display: none;
 }
 
 .block-toolbox > .ui-draggable input {
-    font-size: 10px;
+    font-size: 13px;
     padding: 2px;
 }
 
 .block-toolbox > .ui-draggable.ui-draggable-dragging {
     font-size: 13px;
+}
+
+.block-toolbox > .ui-draggable.ui-draggable-dragging > div > :not(.function) {
+    display: inline-block;
 }
 
 .block-toolbox > .ui-draggable.ui-draggable-dragging input {
