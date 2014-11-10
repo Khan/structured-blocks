@@ -118,11 +118,17 @@ JSRules.addRule(JSRule.extend({
         if (type === "boolean") {
             val = (val === "true");
         } else if (type === "number") {
-            val = parseFloat(val);
+            val = parseFloat(val) || 0;
+        }
+
+        var newVal = val.toString();
+
+        if (newVal !== event.target.value) {
+            event.target.value = newVal;
         }
 
         this.match.vars.value = val;
-        event.target.size = event.target.value.length || 1;
+        event.target.size = Math.max(newVal.length, 2);
 
         this.triggerUpdate();
     },
