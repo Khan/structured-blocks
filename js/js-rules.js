@@ -156,7 +156,7 @@ JSRules.addRule(JSRule.extend({
             .attr({
                 type: "text",
                 value: val,
-                size: val.length,
+                size: Math.max(val.length, 2),
                 "class": "constant numeric"
             }));
         return this;
