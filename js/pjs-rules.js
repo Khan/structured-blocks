@@ -2,7 +2,7 @@
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        rect(_, _, _, _);
+        rect($x, $y, $width, $height);
     }
 }));
 

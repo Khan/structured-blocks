@@ -481,6 +481,8 @@ var JSASTRule = JSRule.extend({
             if (token.type === "Identifier") {
                 if (token.value === "_") {
                     return children._[_pos++].render().el;
+                } else if (token.value.indexOf("$") === 0) {
+                    return children.vars[token.value.slice(1)].render().el;
                 } else {
                     return buildTag("entity name function call", token);
                 }
