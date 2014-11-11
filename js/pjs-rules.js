@@ -3,56 +3,56 @@
 JSRules.addRule(JSASTRule.extend({
     image: "rect.png",
     structure: function() {
-        rect($x, $y, $width, $height);
+        rect($x_number, $y_number, $w_number, $h_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     image: "line.png",
     structure: function() {
-        line(_, _, _, _);
+        line($x1_number, $y1_number, $s2_number, $y2_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     image: "bezier.png",
     structure: function() {
-        bezier(_, _, _, _, _, _, _, _);
+        bezier($x1_number, $y1_number, $cx1_number, $cy1_number, $cx2_number, $cy2_number, $x2_number, $y2_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     image: "ellipse.png",
     structure: function() {
-        ellipse(_, _, _, _);
+        ellipse($x_number, $y_number, $w_number, $h_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     image: "point.png",
     structure: function() {
-        point(_, _);
+        point($x_number, $y_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     image: "quad.png",
     structure: function() {
-        quad(_, _, _, _, _, _, _, _);
+        quad($x1_number, $y1_number, $x2_number, $y2_number, $x3_number, $y3_number, $x4_number, $y4_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     image: "triangle.png",
     structure: function() {
-        triangle(_, _, _, _, _, _);
+        triangle($x1_number, $y1_number, $x2_number, $y2_number, $x3_number, $y3_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     image: "arc.png",
     structure: function() {
-        arc(_, _, _, _, _, _);
+        arc($x_number, $y_number, $w_number, $h_number, $start_number, $stop_number);
     }
 }));
 
@@ -60,7 +60,7 @@ JSRules.addRule(JSASTRule.extend({
 JSRules.addRule(JSASTRule.extend({
     image: "image.png",
     structure: function() {
-        image(_, _, _);
+        image($image_image, $x_number, $y_number);
     }
 }));
 
@@ -68,13 +68,13 @@ JSRules.addRule(JSASTRule.extend({
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        background(_, _, _);
+        background($r_rgb, $g_rgb, $b_rgb);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        fill(_, _, _);
+        fill($r_rgb, $g_rgb, $b_rgb);
     }
 }));
 
@@ -86,13 +86,13 @@ JSRules.addRule(JSASTRule.extend({
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        stroke(_, _, _);
+        stroke($r_rgb, $g_rgb, $b_rgb);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        strokeWeight(_);
+        strokeWeight($thickness_number);
     }
 }));
 
@@ -104,19 +104,19 @@ JSRules.addRule(JSASTRule.extend({
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        color(_, _, _);
+        color($r_rgb, $g_rgb, $b_rgb);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        blendColor(_, _, _);
+        blendColor($c1_color, $c2_color, $mode_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        lerpColor(_, _, _);
+        lerpColor($c1_color, $c2_color, $amount_number);
     }
 }));
 
@@ -124,20 +124,20 @@ JSRules.addRule(JSASTRule.extend({
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        text(_, _, _);
+        text($text_string, $x_number, $y_number);
     }
 }));
 
 // TODO: Handle additional size argument
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        textFont(_, _);
+        textFont($font_string);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        textSize(_);
+        textSize($size_number);
     }
 }));
 
@@ -145,18 +145,18 @@ JSRules.addRule(JSASTRule.extend({
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        rotate(_);
+        rotate($angle_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        scale(_);
+        scale($amount_number);
     }
 }));
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        translate(_, _);
+        translate($x_number, $y_number);
     }
 }));

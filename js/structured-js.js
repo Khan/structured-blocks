@@ -478,9 +478,11 @@ var JSASTRule = JSRule.extend({
         var children = this.children;
         var tokens = this.tokens;
         var _pos = 0;
+        var skipNext = 0;
 
         var buildTag = function(type, token) {
-            return "<span class='" + type + "'>" + token.value + "</span>";
+            return $("<span class='" + type + "'>" +
+                (token ? token.value : "") + "</span>")[0];
         };
 
         tokens = tokens.map(function(token) {
@@ -488,7 +490,16 @@ var JSASTRule = JSRule.extend({
                 if (token.value === "_") {
                     return children._[_pos++].render().el;
                 } else if (token.value.indexOf("$") === 0) {
-                    return children.vars[token.value.slice(1)].render().el;
+                    var el = children.vars[token.value.slice(1)].render().el;
+                    var typePos = token.value.indexOf("_");
+                    if (typePos > 0) {
+                        var type = token.value.slice(typePos + 1);
+                        var span = buildTag("block block-blank block-" + type +
+                            " block-name-" + token.value.slice(1, typePos));
+                        span.appendChild(el);
+                        el = span;
+                    }
+                    return el;
                 } else {
                     return buildTag("entity name function call", token);
                 }
