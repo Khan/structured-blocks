@@ -110,6 +110,22 @@ var JSToolboxEditor = Backbone.View.extend({
         return this.editor.toScript();
     },
 
+    codeToHTML: function(code) {
+        if (typeof code === "function") {
+            code = JSRules.parseStructure(code);
+        } else if (typeof code === "string") {
+            code = esprima.parse(code).body[0];
+        }
+
+        var rule = JSRules.findRule(code);
+        var html = rule.render().el.outerHTML;
+
+        // Remove all the inputs and replace them with just the text
+        html = html.replace(/<input.*?value="([^"]*)"[^>]*>/g, "$1");
+
+        return html;
+    },
+
     render: function() {
         this.$el.children().detach();
         this.$el.append([
