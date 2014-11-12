@@ -1,3 +1,11 @@
+.block-editor {
+    height: 100%;
+}
+
+.block-editor .program {
+    height: 100%;
+}
+
 .program > .block.block-statements {
     height: 100%;
 }

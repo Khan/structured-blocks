@@ -196,13 +196,17 @@ var JSRules = {
 };
 
 var JSStatements = Backbone.Collection.extend({
-    model: function(attrs, options) {
+    // For Backbone 1.0.0+
+    _prepareModel: function(attrs, options) {
         // Ignore objects that are already a JSRule model
         if (attrs instanceof JSRule) {
+            attrs.collection = this;
             return attrs;
         }
 
-        return JSRules.findRule(attrs, options.parent);
+        var model = JSRules.findRule(attrs, options.parent);
+        model.collection = this;
+        return model;
     }
 });
 
@@ -260,7 +264,7 @@ var JSRule = Backbone.View.extend({
 
         if (this.collection) {
             // Ignore cases where the model isn't in this collection
-            if (collection.indexOf(this) < 0) {
+            if (collection.models.indexOf(this) < 0) {
                 return;
             }
 
@@ -413,6 +417,7 @@ var JSRule = Backbone.View.extend({
 
         var outside = false;
         var stopping = false;
+        var over = false;
 
         $div.sortable({
             revert: false,
@@ -423,15 +428,21 @@ var JSRule = Backbone.View.extend({
                 if (outside) {
                     ui.item.triggerHandler("inside");
                 }
+                over = false;
                 outside = false;
             },
             over: function(e, ui) {
+                if (over) {
+                    return;
+                }
+
                 if (ui.helper.hasClass("ui-draggable")) {
                     var data = ui.helper.data("drag-data");
                     ui.placeholder.trigger("sort-added",
                         [data, getIndex(ui), ui.item]);
                 }
 
+                over = true;
                 outside = false;
                 ui.item.triggerHandler("inside");
                 ui.placeholder.removeClass("outside");
@@ -446,6 +457,7 @@ var JSRule = Backbone.View.extend({
                 }
             },
             stop: function(e, ui) {
+                over = false;
                 stopping = false;
                 ui.item.triggerHandler("drop");
             },
@@ -455,6 +467,7 @@ var JSRule = Backbone.View.extend({
                     return;
                 }
 
+                over = false;
                 outside = true;
 
                 // Remove the model when the external draggable is moved
