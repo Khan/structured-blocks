@@ -450,6 +450,7 @@ var JSRule = Backbone.View.extend({
 
                 over = true;
                 outside = false;
+                stopping = true;
                 ui.item.triggerHandler("inside");
                 ui.placeholder.removeClass("outside");
             },
@@ -470,6 +471,7 @@ var JSRule = Backbone.View.extend({
             out: function(e, ui) {
                 // An extra 'out' event fires while stopping, we ignore it
                 if (stopping) {
+                    stopping = false;
                     return;
                 }
 
