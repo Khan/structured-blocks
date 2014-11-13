@@ -421,71 +421,84 @@ var JSRule = Backbone.View.extend({
             }
         };
 
+        var ignoreNextOut = false;
         var outside = false;
-        var stopping = false;
-        var over = false;
+        var external = true;
+        var added = false;
 
         $div.sortable({
             revert: false,
+            start: function(e, ui) {
+                ignoreNextOut = false;
+                outside = false;
+                external = ui.helper.hasClass("ui-draggable");
+                added = !external;
+            },
             change: function(e, ui) {
                 ui.item.trigger("sort-update", getIndex(ui));
             },
-            receive: function(e, ui) {
-                if (outside) {
-                    ui.item.triggerHandler("inside");
-                }
-                over = false;
-                outside = false;
-            },
             over: function(e, ui) {
-                if (over) {
+                outside = false;
+
+                ui.item.triggerHandler("inside");
+                ui.placeholder.removeClass("outside");
+
+                // If we're dealing with an in-sortable item or an external
+                // draggable that we've already seen, we stop.
+                if (!external || added) {
                     return;
                 }
 
-                if (ui.helper.hasClass("ui-draggable")) {
-                    var data = ui.helper.data("drag-data");
-                    ui.placeholder.trigger("sort-added",
-                        [data, getIndex(ui), ui.item]);
+                ignoreNextOut = true;
+                added = true;
+
+                var data = ui.helper.data("drag-data");
+                ui.placeholder.trigger("sort-added",
+                    [data, getIndex(ui), ui.item]);
+
+                // An 'out' event fires immediately after the first over
+                // event, so we quickly ignore it.
+                setTimeout(function() {
+                    ignoreNextOut = false;
+                }, 0);
+            },
+            out: function(e, ui) {
+                if (ignoreNextOut) {
+                    ignoreNextOut = false;
+                    return;
                 }
 
-                over = true;
-                outside = false;
-                stopping = true;
-                ui.item.triggerHandler("inside");
-                ui.placeholder.removeClass("outside");
+                outside = true;
+
+                ui.placeholder.addClass("outside");
+                ui.item.triggerHandler("outside");
+
+                // If we're dealing with an in-sortable item or an external
+                // draggable that we've already removed, we stop.
+                if (!external || !added) {
+                    return;
+                }
+
+                added = false;
+
+                // Remove the model when the external draggable is moved
+                // outside of the sortable (sortable already removes the elem)
+                ui.item.trigger("sort-removed", getIndex(ui));
             },
             beforeStop: function(e, ui) {
-                stopping = true;
+                // An 'out' event happens during the stop phase, we ignore
+                // it there, as well.
+                ignoreNextOut = true;
 
                 // Remove item when dropped outside the sortable
-                if (outside) {
+                if (outside && added) {
                     ui.item.trigger("sort-removed", getIndex(ui));
                     ui.item.remove();
                 }
             },
             stop: function(e, ui) {
-                over = false;
-                stopping = false;
+                // Trigger drop event
                 ui.item.triggerHandler("drop");
-            },
-            out: function(e, ui) {
-                // An extra 'out' event fires while stopping, we ignore it
-                if (stopping) {
-                    stopping = false;
-                    return;
-                }
-
-                over = false;
-                outside = true;
-
-                // Remove the model when the external draggable is moved
-                // outside of the sortable (sortable already removes the elem)
-                if (ui.helper && ui.helper.hasClass("ui-draggable")) {
-                    ui.item.trigger("sort-removed", getIndex(ui));
-                }
-
-                ui.placeholder.addClass("outside");
-                ui.item.triggerHandler("outside");
             }
         });
 
