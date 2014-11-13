@@ -7,8 +7,8 @@
  * @version 1.0.0
  */
 .block, .block input {
-    font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 13px;
+    font-family: 'Proxima Nova Semibold', 'Helvetica', 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
 }
 
 .block .comment {
