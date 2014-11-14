@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 .block, .block input {
-    font-family: 'Proxima Nova Semibold', 'Helvetica', 'Monaco', 'Consolas', monospace;
+    font-family: 'Proxima Nova Semibold', 'Helvetica', 'Arial', sans-serif;
     font-size: 14px;
 }
 
