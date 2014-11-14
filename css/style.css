@@ -107,7 +107,7 @@
 .block-rgb.block-name-g,
 .block-rgb.block-name-g + .text,
 .block-rgb.block-name-b {
-    display: none;
+    display: none !important;
 }
 
 .block-rgb.block-name-r {
