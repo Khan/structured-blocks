@@ -33,7 +33,7 @@
 }
 
 .block.block-statement {
-    overflow: auto;
+    overflow: hidden;
 }
 
 .block.block-statement > div {
@@ -102,6 +102,22 @@
 .block-toolbox > .ui-draggable.ui-draggable-dragging input {
     font-size: 13px;
     padding: 5px;
+}
+
+.ui-sortable-helper {
+    display: inline-block;
+}
+
+.ui-sortable-helper.outside {
+    opacity: 0.3;
+}
+
+.ui-sortable-helper.outside > div {
+    cursor: not-allowed;
+}
+
+.ui-sortable-placeholder.outside {
+    display: none;
 }
 
 .block-rgb.block-name-r > div,

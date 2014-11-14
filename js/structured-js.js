@@ -448,6 +448,11 @@ var JSRule = Backbone.View.extend({
 
         $div.sortable({
             revert: false,
+            helper: function(e, item) {
+                var $item = $(item);
+                return $item.clone(true).width(
+                    $item.children().outerWidth(true));
+            },
             start: function(e, ui) {
                 ignoreNextOut = false;
                 outside = false;
@@ -462,6 +467,7 @@ var JSRule = Backbone.View.extend({
 
                 ui.item.triggerHandler("inside");
                 ui.placeholder.removeClass("outside");
+                ui.helper.removeClass("outside");
 
                 // If we're dealing with an in-sortable item or an external
                 // draggable that we've already seen, we stop.
@@ -491,6 +497,7 @@ var JSRule = Backbone.View.extend({
                 outside = true;
 
                 ui.placeholder.addClass("outside");
+                ui.helper.addClass("outside");
                 ui.item.triggerHandler("outside");
 
                 // If we're dealing with an in-sortable item or an external
