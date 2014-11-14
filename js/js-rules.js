@@ -128,7 +128,7 @@ JSRules.addRule(JSRule.extend({
         }
 
         this.match.vars.value = val;
-        event.target.size = Math.max(newVal.length, 0);
+        event.target.size = Math.max(newVal.length, 1);
 
         this.triggerUpdate();
     },
@@ -162,7 +162,7 @@ JSRules.addRule(JSRule.extend({
             .attr({
                 type: "text",
                 value: val,
-                size: Math.max(val.length, 0),
+                size: Math.max(val.length, 1),
                 "class": "constant numeric"
             }));
         return this;
