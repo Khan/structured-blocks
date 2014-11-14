@@ -1,31 +1,80 @@
 var JSProgram = JSRules.addRule(JSRule.extend({
     structure: {type: "Program"},
 
-    additionalEvents: {
-        "updated": "updated"
-    },
-
     className: "program",
 
     updated: function() {
-        this.trigger("updated", this.getAST());
+        this.trigger("updated");
     },
 
     genMatch: function() {
+        var leadingComments = this.node.leadingComments || [];
         return {
-            _: [this.node.body]
+            _: [leadingComments.concat(this.node.body)]
         };
     },
 
     toAST: function() {
+        var ast = this.getAST();
         return {
             type: "Program",
-            body: this.getAST()._[0]
+            leadingComments: ast.leadingComments,
+            body: ast._[0]
         };
     },
 
     render: function() {
         this.$el.html(this.renderStatements(this.children._[0]));
+        return this;
+    }
+}));
+
+var JSComment = JSRules.addRule(JSRule.extend({
+    structure: {type: "Line"},
+
+    className: "block block-statement block-comment",
+
+    additionalEvents: {
+        "input input": "onInput"
+    },
+
+    isComment: function() {
+        return true;
+    },
+
+    genMatch: function() {
+        return {
+            _: [this.node.value]
+        };
+    },
+
+    toAST: function() {
+        return {
+            type: "Line",
+            value: this.match._[0].replace(/^\s*/, " ")
+        };
+    },
+
+    onInput: function(event) {
+        this.match._[0] = event.target.value;
+
+        $(event.target).width(JSRules.textWidth(event.target.value) - 8);
+
+        this.triggerUpdate();
+    },
+
+    render: function() {
+        var value = this.match._[0].replace(/^\s*/, "");
+
+        this.$el.html($("<div>").html([
+            "<span class='show-toolbox comment'>//&nbsp;" +
+            "<span class='show-only-toolbox'>Comment</span></span>",
+            $("<input>").attr({
+                type: "text",
+                value: value,
+                "class": "comment"
+            }).width(JSRules.textWidth(value))
+        ]));
         return this;
     }
 }));
@@ -62,7 +111,8 @@ JSRules.addRule(JSRule.extend({
 
     onInput: function(event) {
         this.match.vars.name = event.target.value;
-        event.target.size = event.target.value.length || 1;
+
+        $(event.target).width(JSRules.textWidth(event.target.value) - 4);
 
         this.triggerUpdate();
     },
@@ -71,10 +121,10 @@ JSRules.addRule(JSRule.extend({
         var name = this.match.vars.name.toString();
 
         this.$el.html($("<input>")
+            .width(JSRules.textWidth(name))
             .attr({
                 type: "text",
-                value: name,
-                size: name.length
+                value: name
             }));
         return this;
     }
@@ -128,7 +178,8 @@ JSRules.addRule(JSRule.extend({
         }
 
         this.match.vars.value = val;
-        event.target.size = Math.max(newVal.length, 1);
+
+        $(event.target).width(JSRules.textWidth(newVal) - 4);
 
         this.triggerUpdate();
     },
@@ -159,10 +210,10 @@ JSRules.addRule(JSRule.extend({
 
         this.$el.addClass("block-" + type);
         this.$el.html($("<input>")
+            .width(JSRules.textWidth(val))
             .attr({
                 type: "text",
                 value: val,
-                size: Math.max(val.length, 1),
                 "class": "constant numeric"
             }));
         return this;

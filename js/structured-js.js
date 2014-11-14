@@ -116,7 +116,7 @@ var JSToolboxEditor = Backbone.View.extend({
         } else if (typeof code === "string") {
             // Remove any sort of wrapper function
             code = code.replace(/^function\s*\(\s*\)\s*{([\s\S]*)}$/, "$1");
-            code = esprima.parse(code).body[0];
+            code = JSRules.parseCode(code).body[0];
         }
 
         var rule = JSRules.findRule(code);
@@ -197,6 +197,17 @@ var JSRules = {
         return rule;
     },
 
+    textWidth: function(text) {
+        if (!this.$textSize) {
+            this.$textSize = $("<span>").css({
+                display: "none",
+                "class": "block"
+            }).appendTo("body");
+        }
+
+        return Math.max(this.$textSize.text(text).outerWidth(), 10) + 10;
+    },
+
     tokenize: function(fn) {
         if (typeof fn === "object") {
             return [];
@@ -210,14 +221,20 @@ var JSRules = {
         return esprima.tokenize(fn);
     },
 
+    parseCode: function(code) {
+        var ast = esprima.parse(code,
+            {range: true, tokens: true, comment: true});
+        return escodegen.attachComments(ast, ast.comments, ast.tokens);
+    },
+
     parseProgram: function(code) {
         return new JSProgram({
-            node: esprima.parse(code)
+            node: this.parseCode(code)
         });
     },
 
     parseStructure: function(fn) {
-        return esprima.parse("(" + fn + ")").body[0].expression.body.body[0];
+        return this.parseCode("(" + fn + ")").body[0].expression.body.body[0];
     }
 };
 
@@ -258,6 +275,10 @@ var JSRule = Backbone.View.extend({
         });
         this.children = this.getChildModels();
         this.parent = options.parent;
+    },
+
+    isComment: function() {
+        return false;
     },
 
     inside: function() {
@@ -375,7 +396,19 @@ var JSRule = Backbone.View.extend({
     },
 
     modelMatchArray: function(matches) {
-        return new JSStatements(matches, {
+        var newMatches = [];
+
+        matches.forEach(function(match) {
+            if (match.leadingComments) {
+                newMatches = newMatches.concat(match.leadingComments);
+            }
+            newMatches.push(match);
+            if (match.trailingComments) {
+                newMatches = newMatches.concat(match.trailingComments);
+            }
+        });
+
+        return new JSStatements(newMatches, {
             parent: this
         });
     },
@@ -389,25 +422,41 @@ var JSRule = Backbone.View.extend({
     },
 
     toScript: function() {
-        return escodegen.generate(this.toAST());
+        var code = escodegen.generate(this.toAST(), {comment: true});
+
+        // Following comments are placed on the same line as the previous
+        // statement (which is weird). We change this.
+        code = code.replace(/;    \/\//g, ";\n\n//");
+
+        return code;
     },
 
     getAST: function() {
         var state = this.match;
-        var ret = {_: [], vars: {}};
+        var ret = {_: [], vars: {}, leadingComments: []};
 
         for (var i = 0; i < state._.length; i++) {
             var match = state._[i];
-            ret._[i] = _.isArray(match) ?
-                this.astComponentArray(match, "_", i) :
-                this.astComponent(match, "_", i);
+            if (_.isArray(match)) {
+                var array = this.astComponentArray(match, "_", i);
+                ret.leadingComments =
+                    ret.leadingComments.concat(array.leadingComments);
+                ret._[i] = array.data;
+            } else {
+                ret._[i] = this.astComponent(match, "_", i);
+            }
         }
 
         for (var name in state.vars) {
             var match = state.vars[name];
-            ret.vars[name] = _.isArray(match) ?
-                this.astComponentArray(match, "vars", name) :
-                this.astComponent(match, "vars", name);
+            if (_.isArray(match)) {
+                var array = this.astComponentArray(match, "vars", name);
+                ret.leadingComments =
+                    ret.leadingComments.concat(array.leadingComments);
+                ret.vars[name] = array.data;
+            } else {
+                ret.vars[name] = this.astComponent(match, "vars", name);
+            }
         }
 
         return ret;
@@ -418,9 +467,27 @@ var JSRule = Backbone.View.extend({
     },
 
     astComponentArray: function(matches, ns, id) {
-        return this.children[ns][id].map(function(model) {
-            return model.toAST();
-        });
+        var ret = {data: [], leadingComments: []};
+
+        this.children[ns][id].forEach(function(model) {
+            var ast = model.toAST();
+
+            if (model.isComment()) {
+                if (ret.data.length > 0) {
+                    var last = ret.data[ret.data.length - 1];
+                    if (!last.trailingComments) {
+                        last.trailingComments = [];
+                    }
+                    last.trailingComments.push(ast);
+                } else {
+                    ret.leadingComments.push(ast);
+                }
+            } else {
+                ret.data.push(ast);
+            }
+        })
+
+        return ret;
     },
 
     renderStatements: function(collection) {
@@ -448,6 +515,7 @@ var JSRule = Backbone.View.extend({
 
         $div.sortable({
             revert: false,
+            handle: "> div",
             helper: function(e, item) {
                 var $item = $(item);
                 return $item.clone(true).width(
@@ -578,7 +646,8 @@ var JSASTRule = JSRule.extend({
                     }
                     return el;
                 } else {
-                    return buildTag("entity name function call", token);
+                    return buildTag("entity name function call show-toolbox",
+                        token);
                 }
             } else if (token.type === "Punctuator") {
                 switch(token.value) {
@@ -618,7 +687,8 @@ var JSASTRule = JSRule.extend({
 
         if (this.image && this.imagesDir) {
             tokens.push("<img src='" + this.imagesDir + "toolbox/" +
-                this.image  + "' class='toolbox-image'/>")
+                this.image  +
+                "' class='show-toolbox show-only-toolbox toolbox-image'/>");
         }
 
         this.$el.html($("<div>").append(tokens));
