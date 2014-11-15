@@ -139,7 +139,8 @@ JSRules.addRule(JSRule.extend({
         "click": "activate",
         "input input": "onInput",
         "blur input": "deactivate",
-        "keydown input": "onKeyDown"
+        "keydown input": "onKeyDown",
+        "updateValue": "updateValue"
     },
 
     getType: function() {
@@ -155,9 +156,24 @@ JSRules.addRule(JSRule.extend({
     },
 
     toAST: function() {
+        var value = this.match.vars.value;
+
+        // Negative numbers are handled with a different expression
+        if (this.getType() === "number" && value < 0) {
+            return {
+                type: "UnaryExpression",
+                operator: "-",
+                prefix: true,
+                argument: {
+                    type: "Literal",
+                    value: Math.abs(value)
+                }
+            };
+        }
+
         return {
             type: "Literal",
-            value: this.match.vars.value
+            value: value
         };
     },
 
@@ -166,7 +182,9 @@ JSRules.addRule(JSRule.extend({
     },
 
     setValue: function(val) {
-        var origVal = val;
+        var $input = this.$el.find("input");
+        var input = $input[0];
+
         var type = this.getType();
 
         if (type === "boolean") {
@@ -176,10 +194,8 @@ JSRules.addRule(JSRule.extend({
         }
 
         var newVal = val.toString();
-        var $input = this.$el.find("input");
-        var input = $input[0];
 
-        if (newVal !== origVal) {
+        if (newVal !== input.value) {
             input.value = newVal;
         }
 
@@ -189,8 +205,12 @@ JSRules.addRule(JSRule.extend({
         this.triggerUpdate();
     },
 
-    onInput: function(event) {
-        this.setValue(event.target.value);
+    updateValue: function(e, val) {
+        this.setValue(val);
+    },
+
+    onInput: function(e) {
+        this.setValue(e.target.value);
     },
 
     onKeyDown: function(e) {
@@ -225,6 +245,7 @@ JSRules.addRule(JSRule.extend({
                 value: val,
                 "class": "constant numeric"
             }));
+        this.$el.data("value", val);
         return this;
     }
 }));
