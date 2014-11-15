@@ -66,13 +66,13 @@ JSRules.addRule(JSASTRule.extend({
 
 // Colors
 
-JSRules.addRule(JSASTRule.extend({
+JSRules.addRule(JSASTColorRule.extend({
     structure: function() {
         background($r_rgb, $g_rgb, $b_rgb);
     }
 }));
 
-JSRules.addRule(JSASTRule.extend({
+JSRules.addRule(JSASTColorRule.extend({
     structure: function() {
         fill($r_rgb, $g_rgb, $b_rgb);
     }
@@ -84,7 +84,7 @@ JSRules.addRule(JSASTRule.extend({
     }
 }));
 
-JSRules.addRule(JSASTRule.extend({
+JSRules.addRule(JSASTColorRule.extend({
     structure: function() {
         stroke($r_rgb, $g_rgb, $b_rgb);
     }
@@ -102,7 +102,7 @@ JSRules.addRule(JSASTRule.extend({
     }
 }));
 
-JSRules.addRule(JSASTRule.extend({
+JSRules.addRule(JSASTColorRule.extend({
     structure: function() {
         color($r_rgb, $g_rgb, $b_rgb);
     }

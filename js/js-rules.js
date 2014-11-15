@@ -161,8 +161,12 @@ JSRules.addRule(JSRule.extend({
         };
     },
 
-    onInput: function(event) {
-        var val = event.target.value;
+    getValue: function() {
+        return this.match.vars.value;
+    },
+
+    setValue: function(val) {
+        var origVal = val;
         var type = this.getType();
 
         if (type === "boolean") {
@@ -172,9 +176,10 @@ JSRules.addRule(JSRule.extend({
         }
 
         var newVal = val.toString();
+        var input = this.$el.find("input")[0];
 
-        if (newVal !== event.target.value) {
-            event.target.value = newVal;
+        if (newVal !== origVal) {
+            input.value = newVal;
         }
 
         this.match.vars.value = val;
@@ -182,6 +187,10 @@ JSRules.addRule(JSRule.extend({
         $(event.target).width(JSRules.textWidth(newVal) - 4);
 
         this.triggerUpdate();
+    },
+
+    onInput: function(event) {
+        this.setValue(event.target.value);
     },
 
     onKeyDown: function(e) {

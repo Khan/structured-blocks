@@ -693,6 +693,37 @@ var JSASTRule = JSRule.extend({
 
         this.$el.html($("<div>").append(tokens));
 
+        if (this.postRender) {
+            this.postRender();
+        }
+
         return this;
+    }
+});
+
+var JSASTColorRule = JSASTRule.extend({
+    additionalEvents: {
+        updateColor: "updateColor"
+    },
+
+    updateColor: function(e, color) {
+        this.children.vars.r_rgb.setValue(color.r);
+        this.children.vars.g_rgb.setValue(color.g);
+        this.children.vars.b_rgb.setValue(color.b);
+
+        this.postRender();
+    },
+
+    postRender: function() {
+        var color = {
+            r: this.children.vars.r_rgb.getValue(),
+            g: this.children.vars.g_rgb.getValue(),
+            b: this.children.vars.b_rgb.getValue()
+        };
+
+        this.$el.data("color", color);
+
+        this.children.vars.r_rgb.$el.parent().css("background",
+            "rgb(" + [color.r, color.g, color.b].join(",") + ")");
     }
 });
