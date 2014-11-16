@@ -79,6 +79,11 @@
     line-height: 25px;
 }
 
+.block.block-statement.ui-selected > div,
+.block.block-statement.ui-selecting > div {
+    border: 1px solid red;
+}
+
 .block.ui-draggable-dragging > div {
     box-shadow: #333 0px 0px 3px;
 }

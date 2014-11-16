@@ -3,8 +3,16 @@ var JSProgram = JSRules.addRule(JSRule.extend({
 
     className: "program",
 
-    updated: function() {
-        this.trigger("updated");
+    triggerUpdate: function() {
+        // Prevent many updates from spamming updated events
+        if (this.updateDelay) {
+            return;
+        }
+
+        this.updateDelay = setTimeout(function() {
+            this.updateDelay = null;
+            this.trigger("updated");
+        }.bind(this), 0);
     },
 
     genMatch: function() {
