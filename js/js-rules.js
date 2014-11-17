@@ -74,7 +74,7 @@ var JSComment = JSRules.addRule(JSRule.extend({
     render: function() {
         var value = this.match._[0].replace(/^\s*/, "");
 
-        this.$el.html($("<div>").html([
+        this.$el.html($("<div>").addClass("block-wrapper").html([
             "<span class='show-toolbox comment'>//&nbsp;" +
             "<span class='show-only-toolbox'>Comment</span></span>",
             $("<input>").attr({

@@ -525,7 +525,7 @@ var JSRule = Backbone.View.extend({
 
         // Since we cancel mouse interactions on the block-statement children
         // we need to replicate the selection interaction.
-        $div.on("click", ".block-statement > div", function(e) {
+        $div.on("click", ".block-statement .block-wrapper", function(e) {
             var $block = $(this).parent();
             var $selected = $block.siblings(".ui-selected");
 
@@ -576,7 +576,7 @@ var JSRule = Backbone.View.extend({
 
         $div.sortable({
             revert: false,
-            handle: "> div",
+            handle: ".block-wrapper",
             helper: function(e, $item) {
                 if (!$item.hasClass("ui-selected")) {
                     // Un-select all the other nodes, if we just clicked this
@@ -611,7 +611,8 @@ var JSRule = Backbone.View.extend({
                 // Refresh the sortable list after the nodes have been removed
                 $div.sortable("refresh");
 
-                return $("<div>").html($clone).width(maxWidth);
+                return $("<div>").addClass("block-wrapper")
+                    .html($clone).width(maxWidth);
             },
             start: function(e, ui) {
                 ignoreNextOut = false;
@@ -858,7 +859,7 @@ var JSASTRule = JSRule.extend({
                 "' class='show-toolbox show-only-toolbox toolbox-image'/>");
         }
 
-        this.$el.html($("<div>").append(tokens));
+        this.$el.html($("<div>").addClass("block-wrapper").append(tokens));
 
         if (this.postRender) {
             this.postRender();
