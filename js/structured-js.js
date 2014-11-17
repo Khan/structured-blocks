@@ -164,6 +164,8 @@ var JSToolboxEditor = Backbone.View.extend({
 var JSRules = {
     rules: [],
 
+    isTouchDevice: !!("ontouchstart" in window),
+
     findRule: function(node, parent) {
         if (typeof node !== "object") {
             return;
@@ -508,7 +510,7 @@ var JSRule = Backbone.View.extend({
         };
 
         // Enable a selection box to be drawn around the statements
-        if (!("ontouchstart" in window)) {
+        if (!JSRules.isTouchDevice) {
             $div.selectable({
                 filter: ".block-statement",
                 cancel: ".block-statement *"
