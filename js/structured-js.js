@@ -508,10 +508,12 @@ var JSRule = Backbone.View.extend({
         };
 
         // Enable a selection box to be drawn around the statements
-        $div.selectable({
-            filter: ".block-statement",
-            cancel: ".block-statement *"
-        });
+        if (!("ontouchstart" in window)) {
+            $div.selectable({
+                filter: ".block-statement",
+                cancel: ".block-statement *"
+            });
+        }
 
         // Blur the active input if the focus has moved (e.g. starting a
         // selection or a drag)
