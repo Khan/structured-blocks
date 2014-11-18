@@ -580,7 +580,7 @@ var JSRule = Backbone.View.extend({
 
         $div.sortable({
             revert: false,
-            handle: ".block-wrapper",
+            handle: ".block-wrapper > :first-child",
             helper: function(e, $item) {
                 if (!$item.hasClass("ui-selected")) {
                     // Un-select all the other nodes, if we just clicked this
