@@ -769,6 +769,20 @@ var JSRule = Backbone.View.extend({
             }
         });
 
+        // From: https://github.com/luster-io/prevent-overscroll
+        $div.on("touchstart", function(e) {
+            var div = $div[0];
+            var top = div.scrollTop;
+            var totalScroll = div.scrollHeight;
+            var currentScroll = top + div.offsetHeight;
+
+            if (top <= 0) {
+                div.scrollTop = 1;
+            } else if (currentScroll >= totalScroll) {
+                div.scrollTop = top - 1;
+            }
+        });
+
         return $div[0];
     },
 
