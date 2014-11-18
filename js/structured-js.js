@@ -68,7 +68,7 @@ var JSToolbox = Backbone.View.extend({
                     helper: function() {
                         return $item.clone(true);
                     },
-                    revert: "invalid"
+                    revert: false
                 });
 
                 html.push($item);
