@@ -66,7 +66,7 @@ var JSComment = JSRules.addRule(JSRule.extend({
     onInput: function(event) {
         this.match._[0] = event.target.value;
 
-        $(event.target).width(JSRules.textWidth(event.target.value) - 8);
+        $(event.target).width(JSRules.textWidth(event.target.value) - 3);
 
         this.triggerUpdate();
     },
@@ -81,7 +81,7 @@ var JSComment = JSRules.addRule(JSRule.extend({
                 type: "text",
                 value: value,
                 "class": "comment"
-            }).width(JSRules.textWidth(value))
+            }).width(JSRules.textWidth(value) + 4)
         ]));
         return this;
     }
@@ -120,7 +120,7 @@ JSRules.addRule(JSRule.extend({
     onInput: function(event) {
         this.match.vars.name = event.target.value;
 
-        $(event.target).width(JSRules.textWidth(event.target.value) - 4);
+        $(event.target).width(JSRules.textWidth(event.target.value) - 2);
 
         this.triggerUpdate();
     },
@@ -203,7 +203,7 @@ JSRules.addRule(JSRule.extend({
         }
 
         this.match.vars.value = val;
-        this.getInput().width(JSRules.textWidth(newVal) - 4);
+        this.getInput().width(JSRules.textWidth(newVal) - 2);
 
         this.triggerUpdate();
     },

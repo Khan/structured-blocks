@@ -211,7 +211,10 @@ var JSRules = {
                 .addClass("block").appendTo("body");
         }
 
-        return Math.max(this.$textSize.text(text).outerWidth(), 10) + 10;
+        // Replace spaces with non-breaking spaces to preserve width
+        this.$textSize.text(text.replace(/\s/g, "\xA0"));
+
+        return Math.max(this.$textSize.outerWidth(), 10) + 10;
     },
 
     tokenize: function(fn) {
