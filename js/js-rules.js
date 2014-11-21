@@ -46,6 +46,8 @@ var JSComment = JSRules.addRule(JSRule.extend({
         "input input": "onInput"
     },
 
+    defaultValue: $._("Your comment..."),
+
     isComment: function() {
         return true;
     },
@@ -66,7 +68,9 @@ var JSComment = JSRules.addRule(JSRule.extend({
     onInput: function(event) {
         this.match._[0] = event.target.value;
 
-        $(event.target).width(JSRules.textWidth(event.target.value) - 3);
+        var value = event.target.value || this.defaultValue;
+
+        $(event.target).width(JSRules.textWidth(value) - 3);
 
         this.triggerUpdate();
     },
@@ -80,8 +84,9 @@ var JSComment = JSRules.addRule(JSRule.extend({
             $("<input>").attr({
                 type: "text",
                 value: value,
+                placeholder: this.defaultValue,
                 "class": "comment"
-            }).width(JSRules.textWidth(value) + 4)
+            }).width(JSRules.textWidth(value || this.defaultValue) + 4)
         ]));
         return this;
     }
