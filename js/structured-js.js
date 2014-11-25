@@ -80,6 +80,74 @@ var JSToolbox = Backbone.View.extend({
             html.push($("<div>").addClass("toolbox-group").html(groupHTML));
         });
 
+        var getPlaceholder = function(ui) {
+            return ui.draggable.parent().children(".ui-sortable-placeholder");
+        };
+
+        var $trash = $("<div>")
+            .addClass("block-trash")
+            .droppable({
+                over: function(e, ui) {
+                    ui.draggable.data("trash-over", true);
+
+                    var multi = ui.draggable.data("multi");
+
+                    if (multi) {
+                        multi.triggerHandler("overTrash");
+                    } else {
+                        ui.draggable.triggerHandler("overTrash");
+                    }
+
+                    ui.helper.addClass("trash-over");
+                    ui.draggable.addClass("trash-over");
+                    getPlaceholder(ui).addClass("trash-over");
+
+                    $(this).addClass("over");
+                },
+                out: function(e, ui) {
+                    ui.draggable.data("trash-over", false);
+
+                    var multi = ui.draggable.data("multi");
+
+                    if (multi) {
+                        multi.triggerHandler("outTrash");
+                    } else {
+                        ui.draggable.triggerHandler("outTrash");
+                    }
+
+                    ui.helper.removeClass("trash-over");
+                    ui.draggable.removeClass("trash-over");
+                    getPlaceholder(ui).removeClass("trash-over");
+
+                    $(this).removeClass("over");
+                },
+                drop: function(e, ui) {
+                    // Remove item when dropped inside the trash
+                    var multi = ui.draggable.data("multi");
+                    var placeholder = getPlaceholder(ui);
+
+                    var index = ui.draggable.parent().children()
+                        .not(".ui-sortable-helper")
+                        .not(multi || ui.draggable)
+                        .index(placeholder);
+
+                    if (multi) {
+                        multi.each(function() {
+                            $(this).trigger("sort-removed", index);
+                            $(this).remove();
+                        });
+
+                    } else {
+                        ui.draggable.trigger("sort-removed", index);
+                        ui.draggable.remove();
+                    }
+
+                    $(this).removeClass("over");
+                }
+            });
+
+        html.push($trash);
+
         this.$el.html(html);
 
         return this;
@@ -267,8 +335,8 @@ var JSRule = Backbone.View.extend({
         "sort-update": "sortUpdate",
         "sort-added": "sortAdded",
         "sort-removed": "sortRemoved",
-        "inside": "inside",
-        "outside": "outside",
+        "trashOut": "trashOut",
+        "trashOver": "trashOver",
         "drop": "drop"
     },
 
@@ -290,12 +358,12 @@ var JSRule = Backbone.View.extend({
         return false;
     },
 
-    inside: function() {
-        this.$el.removeClass("outside");
+    trashOut: function() {
+        this.$el.removeClass("trash-over");
     },
 
-    outside: function() {
-        this.$el.addClass("outside");
+    trashOver: function() {
+        this.$el.addClass("trash-over");
     },
 
     drop: function() {
@@ -581,7 +649,6 @@ var JSRule = Backbone.View.extend({
         });
 
         var ignoreNextOut = false;
-        var outside = false;
         var external = true;
         var added = false;
 
@@ -628,7 +695,6 @@ var JSRule = Backbone.View.extend({
             },
             start: function(e, ui) {
                 ignoreNextOut = false;
-                outside = false;
                 external = ui.helper.hasClass("ui-draggable");
                 added = !external;
 
@@ -636,6 +702,13 @@ var JSRule = Backbone.View.extend({
                 // element is added.
                 if (external) {
                     ui.item.parent().children().removeClass("ui-selected");
+
+                // Show the "trash" drop area
+                } else {
+                    var $trash = $(".block-trash").show();
+                    setTimeout(function() {
+                        $trash.addClass("visible");
+                    }, 0);
                 }
             },
             change: function(e, ui) {
@@ -666,19 +739,6 @@ var JSRule = Backbone.View.extend({
                 });
             },
             over: function(e, ui) {
-                outside = false;
-
-                var multi = ui.item.data("multi");
-
-                if (multi) {
-                    multi.triggerHandler("inside");
-                } else {
-                    ui.item.triggerHandler("inside");
-                }
-
-                ui.placeholder.removeClass("outside");
-                ui.helper.removeClass("outside");
-
                 // If we're dealing with an in-sortable item or an external
                 // draggable that we've already seen, we stop.
                 if (!external || added) {
@@ -704,19 +764,6 @@ var JSRule = Backbone.View.extend({
                     return;
                 }
 
-                outside = true;
-
-                var multi = ui.item.data("multi");
-
-                if (multi) {
-                    multi.triggerHandler("outside");
-                } else {
-                    ui.item.triggerHandler("outside");
-                }
-
-                ui.placeholder.addClass("outside");
-                ui.helper.addClass("outside");
-
                 // If we're dealing with an in-sortable item or an external
                 // draggable that we've already removed, we stop.
                 if (!external || !added) {
@@ -740,22 +787,6 @@ var JSRule = Backbone.View.extend({
                     // Move all the elements to be after the placeholder
                     multi.show().insertAfter(ui.placeholder);
                 }
-
-                // Remove item when dropped outside the sortable
-                if (outside && added) {
-                    var index = getIndex(ui);
-
-                    if (multi) {
-                        multi.each(function() {
-                            $(this).trigger("sort-removed", index);
-                            $(this).remove();
-                        });
-
-                    } else {
-                        ui.item.trigger("sort-removed", index);
-                        ui.item.remove();
-                    }
-                }
             },
             stop: function(e, ui) {
                 // Trigger drop event
@@ -774,6 +805,11 @@ var JSRule = Backbone.View.extend({
 
                 // Remove any multi drag data
                 ui.item.removeData("multi");
+
+                var $trash = $(".block-trash").removeClass("visible");
+                setTimeout(function() {
+                    $trash.hide();
+                }, 500);
             }
         });
 
