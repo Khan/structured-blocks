@@ -209,6 +209,7 @@ JSRules.addRule(JSRule.extend({
 
         this.match.vars.value = val;
         this.getInput().width(JSRules.textWidth(newVal) - 2);
+        this.$el.data("value", val);
 
         this.triggerUpdate();
     },
