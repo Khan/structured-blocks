@@ -92,7 +92,7 @@ JSRules.addRule(JSASTColorRule.extend({
 
 JSRules.addRule(JSASTRule.extend({
     structure: function() {
-        strokeWeight($thickness_number);
+        strokeWeight($size_number);
     }
 }));
 
