@@ -24,6 +24,19 @@ var JSEditor = Backbone.View.extend({
     },
 
     render: function() {
+        // From: https://github.com/luster-io/prevent-overscroll
+        this.$el.on("touchstart", function(e) {
+            var top = this.scrollTop;
+            var totalScroll = this.scrollHeight;
+            var currentScroll = top + this.offsetHeight;
+
+            if (top <= 0) {
+                this.scrollTop = 1;
+            } else if (currentScroll >= totalScroll) {
+                this.scrollTop = top - 1;
+            }
+        });
+
         this.$el.html(this.code.render().$el);
         return this;
     }
@@ -856,19 +869,6 @@ var JSRule = Backbone.View.extend({
                 setTimeout(function() {
                     $trash.hide();
                 }, 500);
-            }
-        });
-
-        // From: https://github.com/luster-io/prevent-overscroll
-        $div.on("touchstart", function(e) {
-            var top = this.scrollTop;
-            var totalScroll = this.scrollHeight;
-            var currentScroll = top + this.offsetHeight;
-
-            if (top <= 0) {
-                this.scrollTop = 1;
-            } else if (currentScroll >= totalScroll) {
-                this.scrollTop = top - 1;
             }
         });
 
