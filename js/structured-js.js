@@ -64,6 +64,11 @@ var JSToolbox = Backbone.View.extend({
         this.toolbox = toolbox;
     },
 
+    // Move the position of the toolbox on scroll
+    scroll: function(top) {
+        this.el.style.top = top + "px";
+    },
+
     render: function() {
         var html = [];
         var toolbox = this.toolbox;
@@ -184,6 +189,10 @@ var JSToolbox = Backbone.View.extend({
 });
 
 var JSToolboxEditor = Backbone.View.extend({
+    events: {
+        "scroll": "scroll"
+    },
+
     initialize: function(options) {
         this.imagesDir = options.imagesDir;
 
@@ -201,6 +210,10 @@ var JSToolboxEditor = Backbone.View.extend({
         });
 
         this.render();
+    },
+
+    scroll: function() {
+        this.toolbox.scroll(this.el.scrollTop);
     },
 
     setCode: function(code) {
