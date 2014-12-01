@@ -274,11 +274,6 @@ var JSToolboxEditor = Backbone.View.extend({
             this.toolbox.render().$el,
             this.editor.render().$el
         ]);
-
-        // The toolbox needs to be positioned to the right of the
-        // editor, we do this by setting its left margin equal to
-        // the editor width (it is positioned fixed)
-        // this.toolbox.$el.css("marginLeft", this.editor.$el.width());
     }
 });
 
