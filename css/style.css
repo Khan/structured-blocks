@@ -4,17 +4,21 @@
 }
 
 .block-editor {
+    display: flex;
     min-height: 100%;
 }
 
 .block-editor .program {
+    display: flex;
     min-height: 100%;
+    width: 100%;
 }
 
 .program > .block.block-statements {
     min-height: 100%;
+    width: 100%;
     position: relative;
-    margin: 10px 0 50px 0;
+    padding: 10px 0 50px 0;
 }
 
 .block-editor .block.block-statements .block.block-statement.ui-sortable-placeholder {
