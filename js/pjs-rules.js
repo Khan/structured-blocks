@@ -3,7 +3,7 @@
 JSRules.addRule(JSASTRule.extend({
     image: "rect.png",
     structure: function() {
-        rect($x_number, $y_number, $w_number, $h_number);
+        rect($x_number, $y_number, $width_number, $height_number);
     }
 }));
 
@@ -24,7 +24,7 @@ JSRules.addRule(JSASTRule.extend({
 JSRules.addRule(JSASTRule.extend({
     image: "ellipse.png",
     structure: function() {
-        ellipse($x_number, $y_number, $w_number, $h_number);
+        ellipse($x_number, $y_number, $width_number, $height_number);
     }
 }));
 
@@ -52,7 +52,7 @@ JSRules.addRule(JSASTRule.extend({
 JSRules.addRule(JSASTRule.extend({
     image: "arc.png",
     structure: function() {
-        arc($x_number, $y_number, $w_number, $h_number, $start_number, $stop_number);
+        arc($x_number, $y_number, $width_number, $height_number, $start_number, $stop_number);
     }
 }));
 

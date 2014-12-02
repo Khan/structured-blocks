@@ -70,7 +70,7 @@ var JSComment = JSRules.addRule(JSRule.extend({
 
         var value = event.target.value || this.defaultValue;
 
-        $(event.target).width(JSRules.textWidth(value) - 3);
+        $(event.target).width(Math.max(JSRules.textWidth(value) - 3, 40));
 
         this.triggerUpdate();
     },
@@ -86,7 +86,8 @@ var JSComment = JSRules.addRule(JSRule.extend({
                 value: value,
                 placeholder: this.defaultValue,
                 "class": "comment"
-            }).width(JSRules.textWidth(value || this.defaultValue) + 4)
+            }).width(Math.max(
+                JSRules.textWidth(value || this.defaultValue) + 4, 40))
         ]));
         return this;
     }
@@ -125,7 +126,8 @@ JSRules.addRule(JSRule.extend({
     onInput: function(event) {
         this.match.vars.name = event.target.value;
 
-        $(event.target).width(JSRules.textWidth(event.target.value) - 2);
+        $(event.target).width(
+            Math.max(JSRules.textWidth(event.target.value) - 2, 40));
 
         this.triggerUpdate();
     },
@@ -134,7 +136,7 @@ JSRules.addRule(JSRule.extend({
         var name = this.match.vars.name.toString();
 
         this.$el.html($("<input>")
-            .width(JSRules.textWidth(name))
+            .width(Math.max(JSRules.textWidth(name), 40))
             .attr({
                 type: "text",
                 value: name
@@ -208,7 +210,7 @@ JSRules.addRule(JSRule.extend({
         }
 
         this.match.vars.value = val;
-        this.getInput().width(JSRules.textWidth(newVal) - 2);
+        this.getInput().width(Math.max(JSRules.textWidth(newVal) - 2, 40));
         this.$el.data("value", val);
 
         this.triggerUpdate();
@@ -266,7 +268,7 @@ JSRules.addRule(JSRule.extend({
             $input = $("<span>").text(val);
         }
 
-        $input.width(JSRules.textWidth(val))
+        $input.width(Math.max(JSRules.textWidth(val), 40))
             .addClass("input constant numeric");
 
         this.$el.html($input);
