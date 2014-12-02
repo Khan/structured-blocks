@@ -721,6 +721,7 @@ var JSRule = Backbone.View.extend({
             appendTo: ".block-toolbox-editor",
             revert: false,
             handle: ".block-wrapper > :first-child",
+            containment: "parent",
             scroll: true,
             scrollSensitivity: 10,
             scrollSpeed: 10,
