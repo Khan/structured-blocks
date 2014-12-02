@@ -417,7 +417,7 @@ var JSRule = Backbone.View.extend({
         }
 
         // Remove the draggable related classes/styling
-        this.$el.removeClass("ui-draggable ui-draggable-handle")
+        this.$el.removeClass("ui-draggable ui-draggable-handle active")
             .css({width: "", height: ""});
 
         var $el = this.$el;
