@@ -17,6 +17,8 @@ var JSEditor = Backbone.View.extend({
                 this.trigger("updated");
             }.bind(this)
         });
+
+        this.trigger("updated");
     },
 
     toScript: function() {
@@ -263,7 +265,10 @@ var JSToolboxEditor = Backbone.View.extend({
             var totalScroll = this.scrollHeight;
             var currentScroll = top + this.offsetHeight;
 
-            if (top <= 0) {
+            // Don't allow scrolling if there is nothing to scroll!
+            if (totalScroll === this.offsetHeight) {
+                e.preventDefault();
+            } else if (top <= 0) {
                 this.scrollTop = 1;
             } else if (currentScroll >= totalScroll) {
                 this.scrollTop = top - 1;
