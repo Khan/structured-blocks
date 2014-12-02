@@ -1,5 +1,6 @@
 .block-toolbox-editor {
     position: relative;
+    -webkit-overflow-scrolling: auto;
     overflow: auto;
 }
 
