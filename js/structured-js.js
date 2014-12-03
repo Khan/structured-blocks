@@ -733,7 +733,7 @@ var JSRule = Backbone.View.extend({
         $div.sortable({
             appendTo: ".block-toolbox-editor",
             revert: false,
-            handle: ".block-wrapper > :first-child",
+            handle: ".block-wrapper > .grab-handle",
             scroll: true,
             scrollSensitivity: 10,
             scrollSpeed: 10,
@@ -992,6 +992,12 @@ var JSASTRule = JSRule.extend({
                 this.image  +
                 "' class='show-toolbox show-only-toolbox toolbox-image'/>");
         }
+
+        tokens.unshift($(buildTag("grab-handle")).html([
+            // Add a grabber handle
+            buildTag("grabber"),
+            tokens.shift()
+        ]));
 
         this.$el.html($("<div>").addClass("block-wrapper").append(tokens));
 
