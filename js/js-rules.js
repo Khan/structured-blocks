@@ -85,7 +85,7 @@ var JSComment = JSRules.addRule(JSRule.extend({
                 type: "text",
                 value: value,
                 placeholder: this.defaultValue,
-                "class": "comment"
+                "class": "comment input"
             }).width(Math.max(
                 JSRules.textWidth(value || this.defaultValue) + 4, 40))
         ]));
