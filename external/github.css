@@ -11,6 +11,10 @@
     font-size: 16px;
 }
 
+.block .text {
+    color: #999;
+}
+
 .block .comment {
     color: rgb(76, 136, 107)
 }
