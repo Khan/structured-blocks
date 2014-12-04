@@ -122,7 +122,7 @@
 
 .block.block-statement .block-wrapper .grabber {
     position: relative;
-    background: #BBB;
+    background: #CCC;
     display: inline-block;
     vertical-align: middle;
     height: 30px;
@@ -136,14 +136,14 @@
     display: block;
     width: 2px;
     height: 30px;
-    background: #BBB;
-    left: -4px;
+    background: #CCC;
+    left: -5px;
     top: 0;
     content: " ";
 }
 
 .block.block-statement .block-wrapper .grabber:after {
-    left: 4px;
+    left: 5px;
 }
 
 .block.block-statement.ui-selected .block-wrapper,
