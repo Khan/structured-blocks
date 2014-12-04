@@ -20,7 +20,7 @@
 }
 
 .block .constant.numeric {
-    color: rgb(0, 0, 205);
+    color: #444;
 }
 
 .block .storage {
@@ -48,7 +48,7 @@
 }
 
 .block .entity.name.function {
-    color: #0000A2;
+    color: #444;
 }
 
 .block .support {
