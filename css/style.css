@@ -65,6 +65,7 @@
 .block.block-comment .input {
     padding-left: 5px;
     text-align: left;
+    max-width: 345px;
 }
 
 /*
