@@ -46,7 +46,7 @@ var JSComment = JSRules.addRule(JSRule.extend({
         "input input": "onInput"
     },
 
-    defaultValue: $._("Your comment..."),
+    defaultValue: i18n._("Your comment..."),
 
     isComment: function() {
         return true;
